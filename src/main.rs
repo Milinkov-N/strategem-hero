@@ -5,6 +5,8 @@ use crossterm::ExecutableCommand;
 use event::Key;
 use utility::{GameTimer, Penalty};
 
+use crate::strategem::StrategemDifficulty;
+
 mod event;
 mod strategem;
 mod utility;
@@ -48,8 +50,12 @@ fn main() -> std::io::Result<()> {
 
             std::io::stdout().execute(crossterm::cursor::MoveUp(4))?;
             if strategem.is_completed() {
+                score += match strategem.difficulty() {
+                    StrategemDifficulty::Easy => 50,
+                    StrategemDifficulty::Medium => 75,
+                    StrategemDifficulty::Hard => 100,
+                };
                 strategem = strategem::random();
-                score += 100;
             } else if !strategem.is_valid() {
                 penalty.apply(|| strategem.reset());
             }

@@ -38,9 +38,17 @@ impl Display for StrategemKey {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StrategemDifficulty {
+    Easy,
+    Medium,
+    Hard,
+}
+
 #[derive(Clone)]
 pub struct Strategem {
     name: &'static str,
+    difficulty: StrategemDifficulty,
     idx: usize,
     valid: bool,
     completed: bool,
@@ -54,6 +62,10 @@ impl Strategem {
 
     pub const fn name(&self) -> &str {
         self.name
+    }
+
+    pub const fn difficulty(&self) -> &StrategemDifficulty {
+        &self.difficulty
     }
 
     pub fn assert_key(&mut self, key: StrategemKey) {
@@ -137,6 +149,11 @@ impl StrategemBuilder {
     const fn build(self, name: &'static str) -> Strategem {
         Strategem {
             name,
+            difficulty: match self.idx {
+                0..=3 => StrategemDifficulty::Easy,
+                4..=6 => StrategemDifficulty::Medium,
+                _ => StrategemDifficulty::Hard,
+            },
             idx: 0,
             valid: true,
             completed: false,
