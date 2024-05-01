@@ -1,17 +1,35 @@
 use std::time::Duration;
 
-use chrono::TimeDelta;
-use crossterm::{
-    event::{Event, KeyCode, KeyEvent, KeyEventKind},
-    ExecutableCommand,
-};
+use chrono::{DateTime, TimeDelta, Utc};
+use crossterm::ExecutableCommand;
 
+use event::Key;
+
+mod event;
 mod strategem;
 
-use strategem::StrategemKey;
+struct GameTimer {
+    game_over_time: DateTime<Utc>,
+}
+
+impl GameTimer {
+    pub fn start_from(dur: Duration) -> Self {
+        Self {
+            game_over_time: chrono::Utc::now() + dur,
+        }
+    }
+
+    pub fn remaining(&self) -> TimeDelta {
+        self.game_over_time - chrono::Utc::now()
+    }
+
+    pub fn is_over(&self) -> bool {
+        self.game_over_time - chrono::Utc::now() <= TimeDelta::zero()
+    }
+}
 
 fn main() -> std::io::Result<()> {
-    let game_over_time = chrono::Utc::now() + Duration::from_secs(60);
+    let game_timer = GameTimer::start_from(Duration::from_secs(60));
     let mut score: usize = 0;
     let mut penalty_ticks = 0;
     let mut strategem = strategem::random();
@@ -19,61 +37,30 @@ fn main() -> std::io::Result<()> {
     std::io::stdout().execute(crossterm::cursor::Hide)?;
 
     'main_loop: loop {
-        if game_over_time - chrono::Utc::now() <= TimeDelta::zero() {
-            std::io::stdout()
-                .execute(crossterm::cursor::MoveUp(3))?
-                .execute(crossterm::terminal::Clear(
-                    crossterm::terminal::ClearType::FromCursorDown,
-                ))?;
-            println!("Game Over!");
-            println!("Your score: {score}");
-            break;
-        }
-
         if crossterm::event::poll(Duration::from_millis(17))? {
-            match crossterm::event::read()? {
-                Event::Key(KeyEvent {
-                    code: KeyCode::Up,
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => {
-                    strategem.assert_key(StrategemKey::Up);
-                }
-                Event::Key(KeyEvent {
-                    code: KeyCode::Down,
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => {
-                    strategem.assert_key(StrategemKey::Down);
-                }
-                Event::Key(KeyEvent {
-                    code: KeyCode::Left,
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => {
-                    strategem.assert_key(StrategemKey::Left);
-                }
-                Event::Key(KeyEvent {
-                    code: KeyCode::Right,
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => {
-                    strategem.assert_key(StrategemKey::Right);
-                }
-                Event::Key(KeyEvent {
-                    code: KeyCode::Esc,
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => {
-                    std::io::stdout().execute(crossterm::terminal::Clear(
-                        crossterm::terminal::ClearType::FromCursorDown,
-                    ))?;
+            match event::read()? {
+                Some(Key::Escape) => {
+                    std::io::stdout()
+                        .execute(crossterm::cursor::MoveUp(4))?
+                        .execute(crossterm::terminal::Clear(
+                            crossterm::terminal::ClearType::FromCursorDown,
+                        ))?;
                     break 'main_loop;
                 }
+                Some(key) => strategem.assert_key(key.into()),
                 _ => (),
             }
         } else {
-            let time_left = game_over_time - chrono::Utc::now();
+            let time_left = game_timer.remaining();
+            std::io::stdout().execute(crossterm::terminal::Clear(
+                crossterm::terminal::ClearType::FromCursorDown,
+            ))?;
+
+            if game_timer.is_over() {
+                println!("Game Over!");
+                println!("Your score: {score}");
+                break;
+            }
 
             println!("Score: {score}");
             println!(
@@ -82,13 +69,14 @@ fn main() -> std::io::Result<()> {
                 time_left.num_milliseconds() - time_left.num_seconds() * 1000
             );
             println!("{}\n{strategem}", strategem.name());
+
             std::io::stdout().execute(crossterm::cursor::MoveUp(4))?;
 
             if strategem.is_completed() {
                 strategem = strategem::random();
                 score += 100;
             } else if !strategem.is_valid() {
-                if penalty_ticks < 100 {
+                if penalty_ticks < 150 {
                     penalty_ticks += 10;
                 } else {
                     penalty_ticks = 0;
