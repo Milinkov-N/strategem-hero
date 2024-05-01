@@ -48,7 +48,7 @@ pub struct Strategem {
 }
 
 impl Strategem {
-    pub const fn builder() -> StrategemBuilder {
+    const fn builder() -> StrategemBuilder {
         StrategemBuilder::new()
     }
 
@@ -102,13 +102,13 @@ impl Display for Strategem {
     }
 }
 
-pub struct StrategemBuilder {
+struct StrategemBuilder {
     idx: usize,
     code: StrategemCode,
 }
 
 impl StrategemBuilder {
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         Self {
             idx: 0,
             code: [
@@ -118,23 +118,23 @@ impl StrategemBuilder {
         }
     }
 
-    pub const fn up(self) -> Self {
+    const fn up(self) -> Self {
         self.insert(StrategemKey::Up)
     }
 
-    pub const fn down(self) -> Self {
+    const fn down(self) -> Self {
         self.insert(StrategemKey::Down)
     }
 
-    pub const fn left(self) -> Self {
+    const fn left(self) -> Self {
         self.insert(StrategemKey::Left)
     }
 
-    pub const fn right(self) -> Self {
+    const fn right(self) -> Self {
         self.insert(StrategemKey::Right)
     }
 
-    pub const fn build(self, name: &'static str) -> Strategem {
+    const fn build(self, name: &'static str) -> Strategem {
         Strategem {
             name,
             idx: 0,
