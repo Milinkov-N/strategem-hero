@@ -171,7 +171,18 @@ impl StrategemBuilder {
     }
 }
 
-const ALL_STRATEGEMS: [Strategem; 18] = [
+const ALL_STRATEGEMS: [Strategem; 29] = [
+    emg101_hmg_emplacement(),
+    fx12_shield_generator_relay(),
+    aarc3_tesla_tower(),
+    md6_anti_personnel_minefield(),
+    mdi4_incendiary_mines(),
+    amg43_machine_gun_sentry(),
+    ag16_galting_sentry(),
+    am12_mortar_sentry(),
+    aac8_autocannon_sentry(),
+    amls4x_rocket_sentry(),
+    am23_ems_mortar_sentry(),
     orbital_gatling_barrage(),
     orbital_airburst_strike(),
     orbital_120mm_he_barrage(),
@@ -191,6 +202,117 @@ const ALL_STRATEGEMS: [Strategem; 18] = [
     eagle_110mm_rocket_pods(),
     eagle_500kg_bomb(),
 ];
+
+pub const fn emg101_hmg_emplacement() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .left()
+        .right()
+        .right()
+        .left()
+        .build("E/MG-101 HMG Emplacement")
+}
+
+pub const fn fx12_shield_generator_relay() -> Strategem {
+    Strategem::builder()
+        .down()
+        .down()
+        .left()
+        .right()
+        .left()
+        .right()
+        .build("FX-12 Shield Generator Relay")
+}
+
+pub const fn aarc3_tesla_tower() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .right()
+        .up()
+        .left()
+        .right()
+        .build("A/ARC-3 Tesla Tower")
+}
+
+pub const fn md6_anti_personnel_minefield() -> Strategem {
+    Strategem::builder()
+        .down()
+        .left()
+        .up()
+        .right()
+        .build("MD-6 Anti-Personnel Minefield")
+}
+
+pub const fn mdi4_incendiary_mines() -> Strategem {
+    Strategem::builder()
+        .down()
+        .left()
+        .left()
+        .down()
+        .build("MD-I4 Incendiary Mines")
+}
+
+pub const fn amg43_machine_gun_sentry() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .right()
+        .right()
+        .up()
+        .build("A/MG-43 Machine Gun Sentry")
+}
+
+pub const fn ag16_galting_sentry() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .right()
+        .left()
+        .build("A/G-16 Gatling Sentry")
+}
+
+pub const fn am12_mortar_sentry() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .right()
+        .right()
+        .down()
+        .build("A/M-12 Mortar Sentry")
+}
+
+pub const fn aac8_autocannon_sentry() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .right()
+        .up()
+        .left()
+        .up()
+        .build("A/AC-8 Autocannon Sentry")
+}
+
+pub const fn amls4x_rocket_sentry() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .right()
+        .right()
+        .left()
+        .build("A/MLS-4X Rocket Sentry")
+}
+
+pub const fn am23_ems_mortar_sentry() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .right()
+        .down()
+        .right()
+        .build("A/M-23 EMS Mortar Sentry")
+}
 
 pub const fn orbital_gatling_barrage() -> Strategem {
     Strategem::builder()
