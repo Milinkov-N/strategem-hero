@@ -52,26 +52,26 @@ fn main() -> std::io::Result<()> {
             }
         } else {
             let time_left = game_timer.remaining();
-            std::io::stdout().execute(crossterm::terminal::Clear(
-                crossterm::terminal::ClearType::FromCursorDown,
-            ))?;
 
             if game_timer.is_over() {
+                std::io::stdout().execute(crossterm::terminal::Clear(
+                    crossterm::terminal::ClearType::FromCursorDown,
+                ))?;
                 println!("Game Over!");
                 println!("Your score: {score}");
                 break;
             }
 
-            println!("Score: {score}");
-            println!(
-                "Time left: {}.{:0>3.2}s",
+            print!("Score: {score}\n");
+            print!(
+                "Time left: {}.{:0>3.2}s\n",
                 time_left.num_seconds(),
                 time_left.num_milliseconds() - time_left.num_seconds() * 1000
             );
-            println!("{}\n{strategem}", strategem.name());
+            print!("{:32}\n", strategem.name());
+            println!("{strategem}");
 
             std::io::stdout().execute(crossterm::cursor::MoveUp(4))?;
-
             if strategem.is_completed() {
                 strategem = strategem::random();
                 score += 100;
