@@ -1,14 +1,17 @@
 use std::{cell::Cell, fmt::Display, time::Duration};
 
 use chrono::{DateTime, TimeDelta, Utc};
+use crossterm::ExecutableCommand;
 
 pub struct GameTimer {
+    inital_duration: Duration,
     game_over_time: DateTime<Utc>,
 }
 
 impl GameTimer {
     pub fn start_from(dur: Duration) -> Self {
         Self {
+            inital_duration: dur,
             game_over_time: chrono::Utc::now() + dur,
         }
     }
@@ -23,6 +26,10 @@ impl GameTimer {
 
     pub fn add(&mut self, dur: Duration) {
         self.game_over_time += dur;
+    }
+
+    pub fn reset(&mut self) {
+        self.game_over_time = chrono::Utc::now() + self.inital_duration;
     }
 }
 
@@ -60,5 +67,22 @@ impl Penalty {
             self.counter.set(0);
             on_done();
         }
+    }
+}
+
+pub struct HideCursor;
+
+impl HideCursor {
+    pub fn hide() -> std::io::Result<HideCursorGuard> {
+        std::io::stdout().execute(crossterm::cursor::Hide)?;
+        Ok(HideCursorGuard)
+    }
+}
+
+pub struct HideCursorGuard;
+
+impl Drop for HideCursorGuard {
+    fn drop(&mut self) {
+        std::io::stdout().execute(crossterm::cursor::Show).unwrap();
     }
 }
