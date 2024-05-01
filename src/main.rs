@@ -1,37 +1,18 @@
 use std::time::Duration;
 
-use chrono::{DateTime, TimeDelta, Utc};
 use crossterm::ExecutableCommand;
 
 use event::Key;
+use utility::{GameTimer, Penalty};
 
 mod event;
 mod strategem;
-
-struct GameTimer {
-    game_over_time: DateTime<Utc>,
-}
-
-impl GameTimer {
-    pub fn start_from(dur: Duration) -> Self {
-        Self {
-            game_over_time: chrono::Utc::now() + dur,
-        }
-    }
-
-    pub fn remaining(&self) -> TimeDelta {
-        self.game_over_time - chrono::Utc::now()
-    }
-
-    pub fn is_over(&self) -> bool {
-        self.game_over_time - chrono::Utc::now() <= TimeDelta::zero()
-    }
-}
+mod utility;
 
 fn main() -> std::io::Result<()> {
     let game_timer = GameTimer::start_from(Duration::from_secs(60));
+    let penalty = Penalty::new(150, 10);
     let mut score: usize = 0;
-    let mut penalty_ticks = 0;
     let mut strategem = strategem::random();
 
     std::io::stdout().execute(crossterm::cursor::Hide)?;
@@ -51,8 +32,6 @@ fn main() -> std::io::Result<()> {
                 _ => (),
             }
         } else {
-            let time_left = game_timer.remaining();
-
             if game_timer.is_over() {
                 std::io::stdout().execute(crossterm::terminal::Clear(
                     crossterm::terminal::ClearType::FromCursorDown,
@@ -63,11 +42,7 @@ fn main() -> std::io::Result<()> {
             }
 
             print!("Score: {score}\n");
-            print!(
-                "Time left: {}.{:0>3.2}s\n",
-                time_left.num_seconds(),
-                time_left.num_milliseconds() - time_left.num_seconds() * 1000
-            );
+            print!("Time left: {game_timer}\n");
             print!("{:32}\n", strategem.name());
             println!("{strategem}");
 
@@ -76,12 +51,7 @@ fn main() -> std::io::Result<()> {
                 strategem = strategem::random();
                 score += 100;
             } else if !strategem.is_valid() {
-                if penalty_ticks < 150 {
-                    penalty_ticks += 10;
-                } else {
-                    penalty_ticks = 0;
-                    strategem.reset();
-                }
+                penalty.apply(|| strategem.reset());
             }
         }
     }
