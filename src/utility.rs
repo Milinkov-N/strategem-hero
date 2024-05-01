@@ -20,6 +20,10 @@ impl GameTimer {
     pub fn is_over(&self) -> bool {
         self.game_over_time - chrono::Utc::now() <= TimeDelta::zero()
     }
+
+    pub fn add(&mut self, dur: Duration) {
+        self.game_over_time += dur;
+    }
 }
 
 impl Display for GameTimer {
@@ -27,7 +31,7 @@ impl Display for GameTimer {
         let time_left = self.remaining();
         write!(
             f,
-            "{}.{:0>3.2}s",
+            "{:02}.{:0>3.2}s",
             time_left.num_seconds(),
             time_left.num_milliseconds() - time_left.num_seconds() * 1000
         )

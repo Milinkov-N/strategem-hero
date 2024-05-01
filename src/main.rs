@@ -12,7 +12,7 @@ mod strategem;
 mod utility;
 
 fn main() -> std::io::Result<()> {
-    let game_timer = GameTimer::start_from(Duration::from_secs(60));
+    let mut game_timer = GameTimer::start_from(Duration::from_secs(60));
     let penalty = Penalty::new(150, 10);
     let mut score: usize = 0;
     let mut strategem = strategem::random();
@@ -55,6 +55,7 @@ fn main() -> std::io::Result<()> {
                     StrategemDifficulty::Medium => 75,
                     StrategemDifficulty::Hard => 100,
                 };
+                game_timer.add(Duration::from_secs(1));
                 strategem = strategem::random();
             } else if !strategem.is_valid() {
                 penalty.apply(|| strategem.reset());
