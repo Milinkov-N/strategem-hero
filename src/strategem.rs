@@ -3,6 +3,8 @@ use std::fmt::Display;
 use crossterm::style::Stylize;
 use rand::Rng;
 
+use crate::event::Key;
+
 pub type StrategemCode = [Option<StrategemKey>; 16];
 
 #[derive(Clone, PartialEq, Eq)]
@@ -11,6 +13,18 @@ pub enum StrategemKey {
     Down,
     Left,
     Right,
+}
+
+impl From<Key> for StrategemKey {
+    fn from(value: Key) -> Self {
+        match value {
+            Key::ArrowUp => StrategemKey::Up,
+            Key::ArrowDown => StrategemKey::Down,
+            Key::ArrowLeft => StrategemKey::Left,
+            Key::ArrowRight => StrategemKey::Right,
+            unhandled => panic!("Cannot convert {unhandled:#?} to StrategemKey"),
+        }
+    }
 }
 
 impl Display for StrategemKey {
@@ -42,18 +56,15 @@ impl Strategem {
         self.name
     }
 
-    pub fn assert_key(&mut self, key: StrategemKey) -> bool {
+    pub fn assert_key(&mut self, key: StrategemKey) {
         if self.is_completed() || !self.is_valid() {
-            return false;
+            return;
         }
 
         if let Some(code_key) = &self.code[self.idx] {
             self.idx += 1;
             self.valid = code_key.eq(&key);
-            return self.valid;
         }
-
-        false
     }
 
     pub const fn is_valid(&self) -> bool {
@@ -76,9 +87,9 @@ impl Display for Strategem {
         self.code.iter().enumerate().for_each(|(i, code)| {
             if let Some(key) = code {
                 if !self.is_valid() {
-                    write!(f, "{}", key.to_string().dark_red()).unwrap();
+                    write!(f, "{} ", key.to_string().dark_red()).unwrap();
                 } else if i < self.idx {
-                    write!(f, "{}", key.to_string().yellow()).unwrap();
+                    write!(f, "{} ", key.to_string().yellow()).unwrap();
                 } else {
                     write!(f, "{key} ").unwrap();
                 }
@@ -143,7 +154,18 @@ impl StrategemBuilder {
     }
 }
 
-const ALL_STRATEGEMS: [Strategem; 7] = [
+const ALL_STRATEGEMS: [Strategem; 18] = [
+    orbital_gatling_barrage(),
+    orbital_airburst_strike(),
+    orbital_120mm_he_barrage(),
+    orbital_380mm_he_barrage(),
+    orbital_walking_barrage(),
+    orbital_laser(),
+    orbital_railcannon_strike(),
+    orbital_precision_strike(),
+    orbital_gas_strike(),
+    orbital_ems_strike(),
+    orbital_smoke_strike(),
     eagle_strafing_run(),
     eagle_air_strike(),
     eagle_cluster_bomb(),
@@ -152,6 +174,113 @@ const ALL_STRATEGEMS: [Strategem; 7] = [
     eagle_110mm_rocket_pods(),
     eagle_500kg_bomb(),
 ];
+
+pub const fn orbital_gatling_barrage() -> Strategem {
+    Strategem::builder()
+        .right()
+        .down()
+        .left()
+        .up()
+        .up()
+        .build("Orbital Gatling Barrage")
+}
+
+pub const fn orbital_airburst_strike() -> Strategem {
+    Strategem::builder()
+        .right()
+        .right()
+        .right()
+        .build("Orbital Airburst Strike")
+}
+
+pub const fn orbital_120mm_he_barrage() -> Strategem {
+    Strategem::builder()
+        .right()
+        .right()
+        .down()
+        .left()
+        .right()
+        .down()
+        .build("Orbital 120MM HE Barrage")
+}
+
+pub const fn orbital_380mm_he_barrage() -> Strategem {
+    Strategem::builder()
+        .right()
+        .down()
+        .up()
+        .up()
+        .left()
+        .down()
+        .down()
+        .build("Orbital 380MM HE Barrage")
+}
+
+pub const fn orbital_walking_barrage() -> Strategem {
+    Strategem::builder()
+        .right()
+        .down()
+        .right()
+        .down()
+        .right()
+        .down()
+        .build("Orbital Walking Barrage")
+}
+
+pub const fn orbital_laser() -> Strategem {
+    Strategem::builder()
+        .right()
+        .down()
+        .up()
+        .right()
+        .down()
+        .build("Orbital Laser")
+}
+
+pub const fn orbital_railcannon_strike() -> Strategem {
+    Strategem::builder()
+        .right()
+        .up()
+        .down()
+        .down()
+        .right()
+        .build("Orbital Railcannon Strike")
+}
+
+pub const fn orbital_precision_strike() -> Strategem {
+    Strategem::builder()
+        .right()
+        .right()
+        .up()
+        .build("Orbital Precision Strike")
+}
+
+pub const fn orbital_gas_strike() -> Strategem {
+    Strategem::builder()
+        .right()
+        .right()
+        .down()
+        .right()
+        .build("Orbital Gas Strike")
+}
+
+pub const fn orbital_ems_strike() -> Strategem {
+    Strategem::builder()
+        .right()
+        .right()
+        .left()
+        .down()
+        .build("Orbital EMS Strike")
+}
+
+pub const fn orbital_smoke_strike() -> Strategem {
+    Strategem::builder()
+        .right()
+        .right()
+        .down()
+        .up()
+        .build("Orbital Smoke Strike")
+}
 
 pub const fn eagle_strafing_run() -> Strategem {
     Strategem::builder()
