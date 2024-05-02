@@ -1,7 +1,9 @@
 use std::{cell::Cell, fmt::Display, time::Duration};
 
 use chrono::{DateTime, TimeDelta, Utc};
-use crossterm::ExecutableCommand;
+use crossterm::{style::Stylize, ExecutableCommand};
+
+use crate::strategem::StrategemDifficulty;
 
 pub struct GameTimer {
     inital_duration: Duration,
@@ -84,5 +86,53 @@ pub struct HideCursorGuard;
 impl Drop for HideCursorGuard {
     fn drop(&mut self) {
         std::io::stdout().execute(crossterm::cursor::Show).unwrap();
+    }
+}
+
+pub enum Multiplier {
+    FirstTier,
+    SecondTier,
+    ThirdTier,
+}
+
+impl Multiplier {
+    pub fn get(streak: usize) -> Multiplier {
+        match streak {
+            0..=5 => Multiplier::FirstTier,
+            6..=20 => Multiplier::SecondTier,
+            21.. => Multiplier::ThirdTier,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Display for Multiplier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Multiplier::FirstTier => "  ".black(),
+                Multiplier::SecondTier => "x2".green(),
+                Multiplier::ThirdTier => "x3".dark_magenta(),
+            }
+        )
+    }
+}
+
+pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier) -> usize {
+    use Multiplier::*;
+    use StrategemDifficulty::*;
+
+    match (difficulty, tier) {
+        (Easy, FirstTier) => 50,
+        (Medium, FirstTier) => 75,
+        (Hard, FirstTier) => 100,
+        (Easy, SecondTier) => 100,
+        (Medium, SecondTier) => 150,
+        (Hard, SecondTier) => 200,
+        (Easy, ThirdTier) => 125,
+        (Medium, ThirdTier) => 190,
+        (Hard, ThirdTier) => 250,
     }
 }

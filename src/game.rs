@@ -9,14 +9,15 @@ use crossterm::{
 
 use crate::{
     event::Key,
-    strategem::{Strategem, StrategemDifficulty},
-    utility::{GameTimer, HideCursor, Penalty},
+    strategem::Strategem,
+    utility::{self, GameTimer, HideCursor, Multiplier, Penalty},
 };
 
 struct GameState {
     game_timer: GameTimer,
     score: usize,
     best_score: usize,
+    streak: usize,
     strategem: Strategem,
 }
 
@@ -26,6 +27,7 @@ impl GameState {
             game_timer,
             score: 0,
             best_score: 0,
+            streak: 0,
             strategem: crate::strategem::random(),
         }
     }
@@ -33,6 +35,7 @@ impl GameState {
     fn reset(&mut self) {
         self.game_timer.reset();
         self.score = 0;
+        self.streak = 0;
         self.strategem = crate::strategem::random();
     }
 }
@@ -60,27 +63,27 @@ impl Game {
                 score,
                 strategem,
                 game_timer,
+                streak,
                 ..
             } = &mut self.state;
 
             if crossterm::event::poll(Duration::from_millis(17))? {
                 self.handle_input()?;
             } else {
-                print!("Score: {}\n", score);
+                print!("Score: {} {}\n", score, Multiplier::get(*streak));
                 print!("Time left: {}\n", game_timer);
                 print!("{:32}\n", strategem.name());
                 println!("{}", strategem);
 
                 std::io::stdout().execute(crossterm::cursor::MoveUp(4))?;
                 if strategem.is_completed() {
-                    *score += match strategem.difficulty() {
-                        StrategemDifficulty::Easy => 50,
-                        StrategemDifficulty::Medium => 75,
-                        StrategemDifficulty::Hard => 100,
-                    };
+                    *streak += 1;
+                    *score +=
+                        utility::get_score_value(strategem.difficulty(), Multiplier::get(*streak));
                     game_timer.add(Duration::from_millis(1500));
                     *strategem = crate::strategem::random();
                 } else if !strategem.is_valid() {
+                    *streak = 0;
                     self.penalty.apply(|| strategem.reset());
                 }
 
