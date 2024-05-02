@@ -11,8 +11,8 @@ mod strategem;
 mod utility;
 
 fn main() -> std::io::Result<()> {
-    let game_timer = GameTimer::start_from(Duration::from_secs(60));
-    let penalty = Penalty::new(150, 10);
+    let game_timer = GameTimer::start_from(Duration::from_secs(30));
+    let penalty = Penalty::new(250, 10);
     let mut game = Game::new(game_timer, penalty);
 
     game.run()

@@ -78,7 +78,7 @@ impl Game {
                         StrategemDifficulty::Medium => 75,
                         StrategemDifficulty::Hard => 100,
                     };
-                    game_timer.add(Duration::from_secs(1));
+                    game_timer.add(Duration::from_millis(1500));
                     *strategem = crate::strategem::random();
                 } else if !strategem.is_valid() {
                     self.penalty.apply(|| strategem.reset());
@@ -117,7 +117,7 @@ impl Game {
             self.state.best_score = self.state.score;
         }
 
-        println!("Best Score: {}", self.state.best_score);
+        println!("Best score: {}", self.state.best_score);
         println!("Your score: {}", self.state.score);
 
         self.yes_no_prompt(
