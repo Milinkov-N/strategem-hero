@@ -112,6 +112,12 @@ impl Game {
     fn handle_game_over(&mut self) -> std::io::Result<()> {
         std::io::stdout().execute(terminal::Clear(ClearType::FromCursorDown))?;
         println!("Game Over!");
+
+        if self.state.score > self.state.best_score {
+            self.state.best_score = self.state.score;
+        }
+
+        println!("Best Score: {}", self.state.best_score);
         println!("Your score: {}", self.state.score);
 
         self.yes_no_prompt(
@@ -119,11 +125,11 @@ impl Game {
             |this| {
                 this.state.reset();
                 std::io::stdout()
-                    .execute(cursor::MoveUp(3))?
+                    .execute(cursor::MoveUp(4))?
                     .execute(terminal::Clear(ClearType::FromCursorDown))?;
                 Ok(())
             },
-            |this: &mut Game| this.is_running = false,
+            |this| this.is_running = false,
         )?;
 
         Ok(())
