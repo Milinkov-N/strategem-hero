@@ -171,7 +171,18 @@ impl StrategemBuilder {
     }
 }
 
-const ALL_STRATEGEMS: [Strategem; 29] = [
+const ALL_STRATEGEMS: [Strategem; 40] = [
+    reinforce(),
+    sos_beacon(),
+    resupply(),
+    nux223_hellbomb(),
+    sssd_delivery(),
+    seismic_probe(),
+    upload_data(),
+    eagle_rearm(),
+    illumination_flare(),
+    seaf_artillery(),
+    super_earth_flag(),
     emg101_hmg_emplacement(),
     fx12_shield_generator_relay(),
     aarc3_tesla_tower(),
@@ -202,6 +213,115 @@ const ALL_STRATEGEMS: [Strategem; 29] = [
     eagle_110mm_rocket_pods(),
     eagle_500kg_bomb(),
 ];
+
+pub const fn reinforce() -> Strategem {
+    Strategem::builder()
+        .up()
+        .down()
+        .right()
+        .left()
+        .up()
+        .build("Reinforce")
+}
+
+pub const fn sos_beacon() -> Strategem {
+    Strategem::builder()
+        .up()
+        .down()
+        .right()
+        .up()
+        .build("SOS Beacon")
+}
+
+pub const fn resupply() -> Strategem {
+    Strategem::builder()
+        .down()
+        .down()
+        .up()
+        .right()
+        .build("Resupply")
+}
+
+pub const fn nux223_hellbomb() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .left()
+        .down()
+        .up()
+        .right()
+        .down()
+        .up()
+        .build("NUX-223 Hellbomb")
+}
+
+pub const fn sssd_delivery() -> Strategem {
+    Strategem::builder()
+        .down()
+        .down()
+        .down()
+        .up()
+        .up()
+        .build("SSSD Delivery")
+}
+
+pub const fn seismic_probe() -> Strategem {
+    Strategem::builder()
+        .up()
+        .up()
+        .left()
+        .right()
+        .down()
+        .down()
+        .build("Seismic Probe")
+}
+
+pub const fn upload_data() -> Strategem {
+    Strategem::builder()
+        .left()
+        .right()
+        .up()
+        .up()
+        .up()
+        .build("Upload Data")
+}
+
+pub const fn eagle_rearm() -> Strategem {
+    Strategem::builder()
+        .up()
+        .up()
+        .left()
+        .up()
+        .right()
+        .build("Eagle Rearm")
+}
+
+pub const fn illumination_flare() -> Strategem {
+    Strategem::builder()
+        .right()
+        .right()
+        .left()
+        .left()
+        .build("Illumination Flare")
+}
+
+pub const fn seaf_artillery() -> Strategem {
+    Strategem::builder()
+        .right()
+        .up()
+        .up()
+        .down()
+        .build("SEAF Artillery")
+}
+
+pub const fn super_earth_flag() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .down()
+        .up()
+        .build("Super Earth Flag")
+}
 
 pub const fn emg101_hmg_emplacement() -> Strategem {
     Strategem::builder()
