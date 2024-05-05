@@ -171,7 +171,13 @@ impl StrategemBuilder {
     }
 }
 
-const ALL_STRATEGEMS: [Strategem; 56] = [
+const ALL_STRATEGEMS: [Strategem; 62] = [
+    lift850_jump_pack(),
+    b1_supply_pack(),
+    axlas5_guard_dog_rover(),
+    sh20_ballistic_shield_backpack(),
+    sh32_shield_generator_pack(),
+    axar23_guard_dog(),
     mg43_machine_gun(),
     apw1_antimateriel_rifle(),
     m105_stalwart(),
@@ -229,6 +235,75 @@ const ALL_STRATEGEMS: [Strategem; 56] = [
     eagle_110mm_rocket_pods(),
     eagle_500kg_bomb(),
 ];
+
+pub fn random() -> Strategem {
+    ALL_STRATEGEMS[rand::thread_rng().gen::<usize>() % ALL_STRATEGEMS.len()].clone()
+}
+
+pub const fn lift850_jump_pack() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .up()
+        .down()
+        .up()
+        .build("LIFT-850 Jump Pack")
+}
+
+pub const fn b1_supply_pack() -> Strategem {
+    Strategem::builder()
+        .down()
+        .left()
+        .down()
+        .up()
+        .up()
+        .down()
+        .build("B-1 Supply Pack")
+}
+
+pub const fn axlas5_guard_dog_rover() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .left()
+        .up()
+        .right()
+        .right()
+        .build("AX/LAS-5 \"Guard Dog\" Rover")
+}
+
+pub const fn sh20_ballistic_shield_backpack() -> Strategem {
+    Strategem::builder()
+        .down()
+        .left()
+        .down()
+        .down()
+        .up()
+        .left()
+        .build("SH-20 Ballistic Shield Backpack")
+}
+
+pub const fn sh32_shield_generator_pack() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .left()
+        .right()
+        .left()
+        .right()
+        .build("SH-32 Shield Generator Pack")
+}
+
+pub const fn axar23_guard_dog() -> Strategem {
+    Strategem::builder()
+        .down()
+        .up()
+        .left()
+        .up()
+        .right()
+        .down()
+        .build("AX/AR-23 \"Guard Dog\"")
+}
 
 pub const fn mg43_machine_gun() -> Strategem {
     Strategem::builder()
@@ -785,8 +860,4 @@ pub const fn eagle_500kg_bomb() -> Strategem {
         .down()
         .down()
         .build("Eagle 500KG Bomb")
-}
-
-pub fn random() -> Strategem {
-    ALL_STRATEGEMS[rand::thread_rng().gen::<usize>() % ALL_STRATEGEMS.len()].clone()
 }
