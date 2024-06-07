@@ -37,12 +37,22 @@ impl GameTimer {
 
 impl Display for GameTimer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let step = self.initial_duration.as_secs() / 10;
+        let remaining_steps = self.remaining().num_seconds() / step as i64 + 1;
         let time_left = self.remaining();
+        let steps_str = "#".repeat(remaining_steps as usize);
+
         write!(
             f,
-            "{:02}.{:0>3.2}s",
+            "[{}{}] {:02}.{:.1}s",
+            match remaining_steps {
+                1..=2 => steps_str.red(),
+                3..=5 => steps_str.dark_yellow(),
+                _ => steps_str.green(),
+            },
+            " ".repeat(10 - remaining_steps as usize),
             time_left.num_seconds(),
-            time_left.num_milliseconds() - time_left.num_seconds() * 1000
+            (time_left.num_milliseconds() - time_left.num_seconds() * 1000) / 100
         )
     }
 }

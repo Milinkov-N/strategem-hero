@@ -71,8 +71,8 @@ impl Game {
                 self.handle_input()?;
             } else {
                 print!("Score: {} {}\n", score, Multiplier::get(*streak));
-                print!("Time left: {}\n", game_timer);
-                println!("{}", strategem);
+                print!("{game_timer}\n");
+                println!("{strategem}");
 
                 std::io::stdout().execute(crossterm::cursor::MoveUp(4))?;
                 if strategem.is_completed() {
