@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crossterm::style::Stylize;
 use rand::Rng;
 
-use crate::event::Key;
+use crate::{event::Key, utility::format_strategem_name};
 
 pub type StrategemCode = [Option<StrategemKey>; 16];
 
@@ -45,10 +45,19 @@ pub enum StrategemDifficulty {
     Hard,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StrategemClass {
+    Supply,
+    Mission,
+    Defensive,
+    Offensive,
+}
+
 #[derive(Clone)]
 pub struct Strategem {
     name: &'static str,
     difficulty: StrategemDifficulty,
+    class: StrategemClass,
     idx: usize,
     valid: bool,
     completed: bool,
@@ -56,8 +65,8 @@ pub struct Strategem {
 }
 
 impl Strategem {
-    const fn builder() -> StrategemBuilder {
-        StrategemBuilder::new()
+    const fn builder(class: StrategemClass) -> StrategemBuilder {
+        StrategemBuilder::new(class)
     }
 
     pub const fn name(&self) -> &str {
@@ -66,6 +75,10 @@ impl Strategem {
 
     pub const fn difficulty(&self) -> &StrategemDifficulty {
         &self.difficulty
+    }
+
+    pub const fn class(&self) -> &StrategemClass {
+        &self.class
     }
 
     pub fn assert_key(&mut self, key: StrategemKey) {
@@ -96,6 +109,9 @@ impl Strategem {
 
 impl Display for Strategem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fmt_name = format_strategem_name(&self);
+        write!(f, "\x1b[K{}\n", fmt_name)?;
+
         self.code.iter().enumerate().for_each(|(i, code)| {
             if let Some(key) = code {
                 if !self.is_valid() {
@@ -117,16 +133,18 @@ impl Display for Strategem {
 struct StrategemBuilder {
     idx: usize,
     code: StrategemCode,
+    class: StrategemClass,
 }
 
 impl StrategemBuilder {
-    const fn new() -> Self {
+    const fn new(class: StrategemClass) -> Self {
         Self {
             idx: 0,
             code: [
                 None, None, None, None, None, None, None, None, None, None, None, None, None, None,
                 None, None,
             ],
+            class,
         }
     }
 
@@ -154,6 +172,7 @@ impl StrategemBuilder {
                 4..=6 => StrategemDifficulty::Medium,
                 _ => StrategemDifficulty::Hard,
             },
+            class: self.class,
             idx: 0,
             valid: true,
             completed: false,
@@ -241,7 +260,7 @@ pub fn random() -> Strategem {
 }
 
 pub const fn lift850_jump_pack() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .up()
         .up()
@@ -251,7 +270,7 @@ pub const fn lift850_jump_pack() -> Strategem {
 }
 
 pub const fn b1_supply_pack() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .down()
@@ -262,7 +281,7 @@ pub const fn b1_supply_pack() -> Strategem {
 }
 
 pub const fn axlas5_guard_dog_rover() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .up()
         .left()
@@ -273,7 +292,7 @@ pub const fn axlas5_guard_dog_rover() -> Strategem {
 }
 
 pub const fn sh20_ballistic_shield_backpack() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .down()
@@ -284,7 +303,7 @@ pub const fn sh20_ballistic_shield_backpack() -> Strategem {
 }
 
 pub const fn sh32_shield_generator_pack() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .up()
         .left()
@@ -295,7 +314,7 @@ pub const fn sh32_shield_generator_pack() -> Strategem {
 }
 
 pub const fn axar23_guard_dog() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .up()
         .left()
@@ -306,7 +325,7 @@ pub const fn axar23_guard_dog() -> Strategem {
 }
 
 pub const fn mg43_machine_gun() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .down()
@@ -316,7 +335,7 @@ pub const fn mg43_machine_gun() -> Strategem {
 }
 
 pub const fn apw1_antimateriel_rifle() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .right()
@@ -326,7 +345,7 @@ pub const fn apw1_antimateriel_rifle() -> Strategem {
 }
 
 pub const fn m105_stalwart() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .down()
@@ -337,7 +356,7 @@ pub const fn m105_stalwart() -> Strategem {
 }
 
 pub const fn eat17_expendable_antitank() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .down()
         .left()
@@ -347,7 +366,7 @@ pub const fn eat17_expendable_antitank() -> Strategem {
 }
 
 pub const fn gr8_recoilless_rifle() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .right()
@@ -357,7 +376,7 @@ pub const fn gr8_recoilless_rifle() -> Strategem {
 }
 
 pub const fn flam40_flamethrower() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .up()
@@ -367,7 +386,7 @@ pub const fn flam40_flamethrower() -> Strategem {
 }
 
 pub const fn ac8_autocannon() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .down()
@@ -378,7 +397,7 @@ pub const fn ac8_autocannon() -> Strategem {
 }
 
 pub const fn mg206_heavy_machine_gun() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .up()
@@ -388,7 +407,7 @@ pub const fn mg206_heavy_machine_gun() -> Strategem {
 }
 
 pub const fn rs422_railgun() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .right()
         .down()
@@ -399,7 +418,7 @@ pub const fn rs422_railgun() -> Strategem {
 }
 
 pub const fn faf14_spear_launcher() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .down()
         .up()
@@ -409,7 +428,7 @@ pub const fn faf14_spear_launcher() -> Strategem {
 }
 
 pub const fn gl21_grenade_launcher() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .up()
@@ -419,7 +438,7 @@ pub const fn gl21_grenade_launcher() -> Strategem {
 }
 
 pub const fn las98_laser_cannon() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .left()
         .down()
@@ -429,7 +448,7 @@ pub const fn las98_laser_cannon() -> Strategem {
 }
 
 pub const fn arc3_arc_thrower() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .right()
         .down()
@@ -440,7 +459,7 @@ pub const fn arc3_arc_thrower() -> Strategem {
 }
 
 pub const fn las99_quasar_cannon() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .down()
         .up()
@@ -450,7 +469,7 @@ pub const fn las99_quasar_cannon() -> Strategem {
 }
 
 pub const fn rl77_airburst_rocket_launcher() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .down()
         .up()
         .up()
@@ -460,7 +479,7 @@ pub const fn rl77_airburst_rocket_launcher() -> Strategem {
 }
 
 pub const fn exo45_patriot_exosuit() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Supply)
         .left()
         .down()
         .right()
@@ -472,7 +491,7 @@ pub const fn exo45_patriot_exosuit() -> Strategem {
 }
 
 pub const fn reinforce() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .up()
         .down()
         .right()
@@ -482,7 +501,7 @@ pub const fn reinforce() -> Strategem {
 }
 
 pub const fn sos_beacon() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .up()
         .down()
         .right()
@@ -491,7 +510,7 @@ pub const fn sos_beacon() -> Strategem {
 }
 
 pub const fn resupply() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .down()
         .down()
         .up()
@@ -500,7 +519,7 @@ pub const fn resupply() -> Strategem {
 }
 
 pub const fn nux223_hellbomb() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .down()
         .up()
         .left()
@@ -513,7 +532,7 @@ pub const fn nux223_hellbomb() -> Strategem {
 }
 
 pub const fn sssd_delivery() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .down()
         .down()
         .down()
@@ -523,7 +542,7 @@ pub const fn sssd_delivery() -> Strategem {
 }
 
 pub const fn seismic_probe() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .up()
         .up()
         .left()
@@ -534,7 +553,7 @@ pub const fn seismic_probe() -> Strategem {
 }
 
 pub const fn upload_data() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .left()
         .right()
         .up()
@@ -544,7 +563,7 @@ pub const fn upload_data() -> Strategem {
 }
 
 pub const fn eagle_rearm() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .up()
         .up()
         .left()
@@ -554,7 +573,7 @@ pub const fn eagle_rearm() -> Strategem {
 }
 
 pub const fn illumination_flare() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .right()
         .right()
         .left()
@@ -563,7 +582,7 @@ pub const fn illumination_flare() -> Strategem {
 }
 
 pub const fn seaf_artillery() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .right()
         .up()
         .up()
@@ -572,7 +591,7 @@ pub const fn seaf_artillery() -> Strategem {
 }
 
 pub const fn super_earth_flag() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Mission)
         .down()
         .up()
         .down()
@@ -581,7 +600,7 @@ pub const fn super_earth_flag() -> Strategem {
 }
 
 pub const fn emg101_hmg_emplacement() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .up()
         .left()
@@ -592,7 +611,7 @@ pub const fn emg101_hmg_emplacement() -> Strategem {
 }
 
 pub const fn fx12_shield_generator_relay() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .down()
         .left()
@@ -603,7 +622,7 @@ pub const fn fx12_shield_generator_relay() -> Strategem {
 }
 
 pub const fn aarc3_tesla_tower() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .up()
         .right()
@@ -614,7 +633,7 @@ pub const fn aarc3_tesla_tower() -> Strategem {
 }
 
 pub const fn md6_anti_personnel_minefield() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .left()
         .up()
@@ -623,7 +642,7 @@ pub const fn md6_anti_personnel_minefield() -> Strategem {
 }
 
 pub const fn mdi4_incendiary_mines() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .left()
         .left()
@@ -632,7 +651,7 @@ pub const fn mdi4_incendiary_mines() -> Strategem {
 }
 
 pub const fn amg43_machine_gun_sentry() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .up()
         .right()
@@ -642,7 +661,7 @@ pub const fn amg43_machine_gun_sentry() -> Strategem {
 }
 
 pub const fn ag16_galting_sentry() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .up()
         .right()
@@ -651,7 +670,7 @@ pub const fn ag16_galting_sentry() -> Strategem {
 }
 
 pub const fn am12_mortar_sentry() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .up()
         .right()
@@ -661,7 +680,7 @@ pub const fn am12_mortar_sentry() -> Strategem {
 }
 
 pub const fn aac8_autocannon_sentry() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .up()
         .right()
@@ -672,7 +691,7 @@ pub const fn aac8_autocannon_sentry() -> Strategem {
 }
 
 pub const fn amls4x_rocket_sentry() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .up()
         .right()
@@ -682,7 +701,7 @@ pub const fn amls4x_rocket_sentry() -> Strategem {
 }
 
 pub const fn am23_ems_mortar_sentry() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Defensive)
         .down()
         .up()
         .right()
@@ -692,7 +711,7 @@ pub const fn am23_ems_mortar_sentry() -> Strategem {
 }
 
 pub const fn orbital_gatling_barrage() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .down()
         .left()
@@ -702,7 +721,7 @@ pub const fn orbital_gatling_barrage() -> Strategem {
 }
 
 pub const fn orbital_airburst_strike() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .right()
         .right()
@@ -710,7 +729,7 @@ pub const fn orbital_airburst_strike() -> Strategem {
 }
 
 pub const fn orbital_120mm_he_barrage() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .right()
         .down()
@@ -721,7 +740,7 @@ pub const fn orbital_120mm_he_barrage() -> Strategem {
 }
 
 pub const fn orbital_380mm_he_barrage() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .down()
         .up()
@@ -733,7 +752,7 @@ pub const fn orbital_380mm_he_barrage() -> Strategem {
 }
 
 pub const fn orbital_walking_barrage() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .down()
         .right()
@@ -744,7 +763,7 @@ pub const fn orbital_walking_barrage() -> Strategem {
 }
 
 pub const fn orbital_laser() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .down()
         .up()
@@ -754,7 +773,7 @@ pub const fn orbital_laser() -> Strategem {
 }
 
 pub const fn orbital_railcannon_strike() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .up()
         .down()
@@ -764,7 +783,7 @@ pub const fn orbital_railcannon_strike() -> Strategem {
 }
 
 pub const fn orbital_precision_strike() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .right()
         .up()
@@ -772,7 +791,7 @@ pub const fn orbital_precision_strike() -> Strategem {
 }
 
 pub const fn orbital_gas_strike() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .right()
         .down()
@@ -781,7 +800,7 @@ pub const fn orbital_gas_strike() -> Strategem {
 }
 
 pub const fn orbital_ems_strike() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .right()
         .left()
@@ -790,7 +809,7 @@ pub const fn orbital_ems_strike() -> Strategem {
 }
 
 pub const fn orbital_smoke_strike() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .right()
         .right()
         .down()
@@ -799,7 +818,7 @@ pub const fn orbital_smoke_strike() -> Strategem {
 }
 
 pub const fn eagle_strafing_run() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .up()
         .right()
         .right()
@@ -807,7 +826,7 @@ pub const fn eagle_strafing_run() -> Strategem {
 }
 
 pub const fn eagle_air_strike() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .up()
         .right()
         .down()
@@ -816,7 +835,7 @@ pub const fn eagle_air_strike() -> Strategem {
 }
 
 pub const fn eagle_cluster_bomb() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .up()
         .right()
         .down()
@@ -826,7 +845,7 @@ pub const fn eagle_cluster_bomb() -> Strategem {
 }
 
 pub const fn eagle_napalm_airstrike() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .up()
         .right()
         .down()
@@ -835,7 +854,7 @@ pub const fn eagle_napalm_airstrike() -> Strategem {
 }
 
 pub const fn eagle_smoke_strike() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .up()
         .right()
         .up()
@@ -844,7 +863,7 @@ pub const fn eagle_smoke_strike() -> Strategem {
 }
 
 pub const fn eagle_110mm_rocket_pods() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .up()
         .right()
         .up()
@@ -853,7 +872,7 @@ pub const fn eagle_110mm_rocket_pods() -> Strategem {
 }
 
 pub const fn eagle_500kg_bomb() -> Strategem {
-    Strategem::builder()
+    Strategem::builder(StrategemClass::Offensive)
         .up()
         .right()
         .down()

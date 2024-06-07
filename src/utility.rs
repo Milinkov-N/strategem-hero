@@ -3,17 +3,17 @@ use std::{cell::Cell, fmt::Display, time::Duration};
 use chrono::{DateTime, TimeDelta, Utc};
 use crossterm::{style::Stylize, ExecutableCommand};
 
-use crate::strategem::StrategemDifficulty;
+use crate::strategem::{Strategem, StrategemClass, StrategemDifficulty};
 
 pub struct GameTimer {
-    inital_duration: Duration,
+    initial_duration: Duration,
     game_over_time: DateTime<Utc>,
 }
 
 impl GameTimer {
     pub fn start_from(dur: Duration) -> Self {
         Self {
-            inital_duration: dur,
+            initial_duration: dur,
             game_over_time: chrono::Utc::now() + dur,
         }
     }
@@ -31,7 +31,7 @@ impl GameTimer {
     }
 
     pub fn reset(&mut self) {
-        self.game_over_time = chrono::Utc::now() + self.inital_duration;
+        self.game_over_time = chrono::Utc::now() + self.initial_duration;
     }
 }
 
@@ -134,5 +134,42 @@ pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier) -> us
         (Easy, ThirdTier) => 125,
         (Medium, ThirdTier) => 190,
         (Hard, ThirdTier) => 250,
+    }
+}
+
+pub fn format_strategem_name(strategem: &Strategem) -> String {
+    match strategem.class() {
+        StrategemClass::Supply => {
+            format!(
+                "|{}{}{}|",
+                " ".on_dark_green(),
+                strategem.name().on_dark_green().black(),
+                " ".on_dark_green(),
+            )
+        }
+        StrategemClass::Mission => {
+            format!(
+                "|{}{}{}|",
+                " ".on_dark_yellow(),
+                strategem.name().on_dark_yellow().white(),
+                " ".on_dark_yellow(),
+            )
+        }
+        StrategemClass::Defensive => {
+            format!(
+                "|{}{}{}|",
+                " ".on_dark_cyan(),
+                strategem.name().on_dark_cyan().white(),
+                " ".on_dark_cyan()
+            )
+        }
+        StrategemClass::Offensive => {
+            format!(
+                "|{}{}{}|",
+                " ".on_red(),
+                strategem.name().on_red().white(),
+                " ".on_red()
+            )
+        }
     }
 }

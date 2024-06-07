@@ -72,7 +72,6 @@ impl Game {
             } else {
                 print!("Score: {} {}\n", score, Multiplier::get(*streak));
                 print!("Time left: {}\n", game_timer);
-                print!("{:32}\n", strategem.name());
                 println!("{}", strategem);
 
                 std::io::stdout().execute(crossterm::cursor::MoveUp(4))?;

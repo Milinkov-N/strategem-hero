@@ -1,7 +1,8 @@
 [package]
 name = "strategem-hero"
 description = "Simple CLI Game following Strategem Hero mini-game from Helldivers 2"
-version = "0.4.1"
+keywords = ["cli", "game"]
+version = "0.5.0"
 edition = "2021"
 license = "MIT"
 authors = ["Milinkov Nikita <milinkov.nik@gmail.com>"]
