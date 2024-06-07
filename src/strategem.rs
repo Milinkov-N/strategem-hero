@@ -190,7 +190,7 @@ impl StrategemBuilder {
     }
 }
 
-const ALL_STRATEGEMS: [Strategem; 62] = [
+const ALL_STRATEGEMS: [Strategem; 63] = [
     lift850_jump_pack(),
     b1_supply_pack(),
     axlas5_guard_dog_rover(),
@@ -213,6 +213,7 @@ const ALL_STRATEGEMS: [Strategem; 62] = [
     las99_quasar_cannon(),
     rl77_airburst_rocket_launcher(),
     exo45_patriot_exosuit(),
+    exo45_emancipator_exosuit(),
     reinforce(),
     sos_beacon(),
     resupply(),
@@ -488,6 +489,18 @@ pub const fn exo45_patriot_exosuit() -> Strategem {
         .down()
         .down()
         .build("EXO-45 Patriot Exosuit")
+}
+
+pub const fn exo45_emancipator_exosuit() -> Strategem {
+    Strategem::builder(StrategemClass::Supply)
+        .left()
+        .down()
+        .right()
+        .up()
+        .left()
+        .down()
+        .up()
+        .build("EXO-49 Emancipator Exosuit")
 }
 
 pub const fn reinforce() -> Strategem {
