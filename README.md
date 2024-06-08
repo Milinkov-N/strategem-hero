@@ -4,7 +4,7 @@ This is simple cli game written in Rust, copying (actually just loosely followin
 
 ## Main features
 
-- Includes all in-game strategems as of May 4th (62 total)
+- Includes all in-game strategems as of June 8th (63 total)
 - Chain of successfull strategem inputs gives a multiplier to the score
 - Strategems are divided into three different levels:
   - Easy - up to 3 inputs
