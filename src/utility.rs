@@ -152,25 +152,25 @@ pub fn format_strategem_name(strategem: &Strategem) -> String {
         StrategemClass::Supply => {
             format!(
                 "|{}{}{}|",
-                " ".on_dark_green(),
-                strategem.name().on_dark_green().black(),
-                " ".on_dark_green(),
+                " ".on_cyan(),
+                strategem.name().on_cyan().black(),
+                " ".on_cyan(),
             )
         }
         StrategemClass::Mission => {
             format!(
                 "|{}{}{}|",
-                " ".on_dark_yellow(),
-                strategem.name().on_dark_yellow().white(),
-                " ".on_dark_yellow(),
+                " ".on_yellow(),
+                strategem.name().on_yellow().black(),
+                " ".on_yellow(),
             )
         }
         StrategemClass::Defensive => {
             format!(
                 "|{}{}{}|",
-                " ".on_dark_cyan(),
-                strategem.name().on_dark_cyan().white(),
-                " ".on_dark_cyan()
+                " ".on_green(),
+                strategem.name().on_green().white(),
+                " ".on_green()
             )
         }
         StrategemClass::Offensive => {
