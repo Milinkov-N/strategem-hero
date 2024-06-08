@@ -1,4 +1,10 @@
-use std::{cell::Cell, fmt::Display, time::Duration};
+use std::{
+    cell::Cell,
+    error::Error,
+    fmt::Display,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use chrono::{DateTime, TimeDelta, Utc};
 use crossterm::{style::Stylize, ExecutableCommand};
@@ -181,5 +187,79 @@ pub fn format_strategem_name(strategem: &Strategem) -> String {
                 " ".on_red()
             )
         }
+    }
+}
+
+pub fn get_app_data_dir() -> Result<PathBuf, Box<dyn Error>> {
+    const GAME_DIR: &str = "strategem-hero";
+
+    #[cfg(target_os = "windows")]
+    {
+        // C:\Users\<Account>\AppData\Roaming\<AppName>
+        let appdata = std::env::var("APPDATA")?;
+        let appdata_path = Path::new(&appdata);
+        Ok(appdata_path.join(GAME_DIR))
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        // /home/<account>/.local/share/<AppName>
+        let home = std::env::var("HOME")?;
+        let homepath = Path::new(&home);
+        Ok(homepath.join(".local").join("share").join(GAME_DIR))
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        // /Users/<Account>/Library/Application Support/<AppName>
+        let home = std::env::var("HOME")?;
+        let homepath = Path::new(&home);
+        Ok(homepath
+            .join("Library")
+            .join("Application Support")
+            .join(GAME_DIR))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn windows_app_data_dir() {
+        let username = std::env::var("USERNAME").unwrap();
+        let path = get_app_data_dir();
+
+        assert_eq!(
+            Path::new("C:\\Users")
+                .join(&username)
+                .join("AppData\\Roaming\\strategem-hero"),
+            path.unwrap()
+        );
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn linux_app_data_dir() {
+        let homepath = std::env::var("HOME").unwrap();
+        let path = get_app_data_dir();
+
+        assert_eq!(
+            Path::new(&homepath).join(".local\\share\\strategem-hero"),
+            path.unwrap()
+        );
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn macos_app_data_dir() {
+        let homepath = std::env::var("HOME").unwrap();
+        let path = get_app_data_dir();
+
+        assert_eq!(
+            Path::new(&homepath).join("Library\\Application Support\\strategem-hero"),
+            path.unwrap()
+        );
     }
 }
