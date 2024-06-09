@@ -50,14 +50,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     #[cfg(debug_assertions)]
     {
-        store.delete_schema()?;
+        store.drop_schema()?;
     }
     store.init_schema()?;
+    store.seed_schema()?;
 
-    store.insert_or_update(450)?;
-
-    let (name, score) = store.select_best_score()?;
-    println!("Best score {score} by {name}");
+    store
+        .select_all()?
+        .iter()
+        .for_each(|rec| println!("\t{:>18} {}", rec.nickname, rec.score));
 
     Ok(game.run()?)
 }
