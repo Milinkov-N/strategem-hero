@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     store.init_schema()?;
     store.seed_schema()?;
 
-    let game_timer = GameTimer::start_from(Duration::from_secs(10));
+    let game_timer = GameTimer::start_from(Duration::from_secs(30));
     let penalty = Penalty::new(250, 10);
     let mut game = Game::new(store, game_timer, penalty);
 
