@@ -2,6 +2,8 @@
 
 This is simple cli game written in Rust, copying (actually just loosely following) Strategem Hero mini-game in Helldivers 2 that available with deluxe edition of the game.
 
+![Demo GIF](./misc/demo.gif)
+
 ## Main features
 
 - Includes all in-game strategems as of June 8th (63 total)
@@ -11,7 +13,7 @@ This is simple cli game written in Rust, copying (actually just loosely followin
   - Medium - from 4 to 6 inputs
   - Hard - from 7 and above inputs
 - Each level of strategems gives different score
-- Tracking of the score between matches. Between games (launches) best score is lost
+- Tracking of best score between launches
 
 ## How to play
 
