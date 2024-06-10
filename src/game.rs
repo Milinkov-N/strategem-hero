@@ -3,6 +3,7 @@ use std::{io::Write, time::Duration};
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
 use crate::{
+    error::Result,
     event::Key,
     storage::LeaderboardStorage,
     strategem::Strategem,
@@ -51,7 +52,7 @@ impl Game {
         }
     }
 
-    pub fn run(&mut self) -> std::io::Result<()> {
+    pub fn run(&mut self) -> Result<()> {
         let _guard = HideCursor::hide()?;
 
         while self.is_running {
@@ -70,7 +71,7 @@ impl Game {
         Ok(())
     }
 
-    fn handle_input(&mut self) -> std::io::Result<()> {
+    fn handle_input(&mut self) -> Result<()> {
         match crate::event::read()? {
             Some(Key::Escape) => {
                 ScreenWriter::clear()?;
@@ -84,7 +85,7 @@ impl Game {
         Ok(())
     }
 
-    fn print_frame(&mut self) -> std::io::Result<()> {
+    fn print_frame(&mut self) -> Result<()> {
         let mut screen = ScreenWriter::new();
         writeln!(
             screen,
@@ -93,7 +94,7 @@ impl Game {
             Multiplier::get(self.state.streak)
         )?;
         writeln!(screen, "{}", self.state.game_timer)?;
-        writeln!(screen, "{}", self.state.strategem)
+        Ok(writeln!(screen, "{}", self.state.strategem)?)
     }
 
     fn update_state(&mut self) {
@@ -116,7 +117,7 @@ impl Game {
         }
     }
 
-    fn handle_game_over(&mut self) -> std::io::Result<()> {
+    fn handle_game_over(&mut self) -> Result<()> {
         let mut screen = ScreenWriter::new();
         let player = self.store.find_by_name("You").ok_or(std::io::Error::new(
             std::io::ErrorKind::NotFound,
@@ -169,7 +170,7 @@ impl Game {
         ScreenWriter::clear()
     }
 
-    fn confirm_action(&mut self) -> std::io::Result<bool> {
+    fn confirm_action(&mut self) -> Result<bool> {
         while let Event::Key(ev) = crossterm::event::read()? {
             match ev {
                 KeyEvent {

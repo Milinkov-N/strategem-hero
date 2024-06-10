@@ -1,7 +1,9 @@
-use std::{error::Error, path::PathBuf};
+use std::path::PathBuf;
 
 use rusqlite::{params, Connection, Row};
 use sql_builder::SqlBuilder;
+
+use crate::error::Result;
 
 pub struct Record {
     pub id: usize,
@@ -11,8 +13,9 @@ pub struct Record {
 }
 
 impl TryFrom<&Row<'_>> for Record {
-    type Error = rusqlite::Error;
-    fn try_from(value: &Row) -> Result<Self, Self::Error> {
+    type Error = crate::error::Error;
+
+    fn try_from(value: &Row) -> Result<Self> {
         let id = value.get::<_, usize>(0)?;
         let nickname = value.get::<_, String>(1)?;
         let score = value.get::<_, usize>(2)?;
@@ -47,7 +50,7 @@ impl LeaderboardStorage {
         }
     }
 
-    pub fn init_schema(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn init_schema(&mut self) -> Result<()> {
         let mut stmt = self.conn.prepare(
             r#"
                     CREATE TABLE IF NOT EXISTS leaderboard (
@@ -63,7 +66,7 @@ impl LeaderboardStorage {
         Ok(())
     }
 
-    pub fn seed_schema(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn seed_schema(&mut self) -> Result<()> {
         if self.count()? > 0 {
             return Ok(());
         }
@@ -83,7 +86,7 @@ impl LeaderboardStorage {
         Ok(())
     }
 
-    pub fn drop_schema(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn drop_schema(&mut self) -> Result<()> {
         let mut stmt = self
             .conn
             .prepare(&format!("DROP TABLE IF EXISTS {}", Self::TABLE_NAME))?;
@@ -93,7 +96,7 @@ impl LeaderboardStorage {
         Ok(())
     }
 
-    pub fn count(&mut self) -> Result<usize, Box<dyn Error>> {
+    pub fn count(&mut self) -> Result<usize> {
         let sql = SqlBuilder::select_from(Self::TABLE_NAME)
             .field("COUNT(*)")
             .sql()?;
@@ -107,7 +110,7 @@ impl LeaderboardStorage {
         Ok(0)
     }
 
-    pub fn select_all(&mut self) -> Result<Vec<Record>, Box<dyn Error>> {
+    pub fn select_all(&mut self) -> Result<Vec<Record>> {
         let mut records = vec![];
         let sql = SqlBuilder::select_from(Self::TABLE_NAME)
             .fields(Self::TABLE_FIELDS)
@@ -124,11 +127,7 @@ impl LeaderboardStorage {
         Ok(records)
     }
 
-    pub fn insert_or_update(
-        &mut self,
-        nickname: &str,
-        new_score: usize,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn insert_or_update(&mut self, nickname: &str, new_score: usize) -> Result<()> {
         let record = self.find_by_name(nickname);
 
         if let Some(record) = record {

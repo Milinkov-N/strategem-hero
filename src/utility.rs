@@ -1,6 +1,5 @@
 use std::{
     cell::Cell,
-    error::Error,
     fmt::Display,
     path::{Path, PathBuf},
     time::Duration,
@@ -14,7 +13,10 @@ use crossterm::{
     ExecutableCommand,
 };
 
-use crate::strategem::{Strategem, StrategemClass, StrategemDifficulty};
+use crate::{
+    error::Result,
+    strategem::{Strategem, StrategemClass, StrategemDifficulty},
+};
 
 pub struct GameTimer {
     initial_duration: Duration,
@@ -96,7 +98,7 @@ impl Penalty {
 pub struct HideCursor;
 
 impl HideCursor {
-    pub fn hide() -> std::io::Result<HideCursorGuard> {
+    pub fn hide() -> Result<HideCursorGuard> {
         std::io::stdout().execute(crossterm::cursor::Hide)?;
         Ok(HideCursorGuard)
     }
@@ -150,7 +152,7 @@ impl ScreenWriter {
         Self { lines_count: 0 }
     }
 
-    pub fn clear() -> std::io::Result<()> {
+    pub fn clear() -> Result<()> {
         std::io::stdout().execute(terminal::Clear(ClearType::FromCursorDown))?;
         Ok(())
     }
@@ -238,7 +240,7 @@ pub fn format_strategem_name(strategem: &Strategem) -> String {
     }
 }
 
-pub fn get_app_data_dir() -> Result<PathBuf, Box<dyn Error>> {
+pub fn get_app_data_dir() -> Result<PathBuf> {
     const GAME_DIR: &str = "strategem-hero";
 
     #[cfg(target_os = "windows")]

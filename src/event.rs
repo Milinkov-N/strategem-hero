@@ -1,5 +1,7 @@
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
+use crate::error::Result;
+
 #[derive(Debug)]
 pub enum Key {
     ArrowUp,
@@ -9,7 +11,7 @@ pub enum Key {
     Escape,
 }
 
-pub fn read() -> std::io::Result<Option<Key>> {
+pub fn read() -> Result<Option<Key>> {
     match crossterm::event::read()? {
         Event::Key(KeyEvent {
             code: KeyCode::Up,

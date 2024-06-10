@@ -1,11 +1,13 @@
-use std::{error::Error, path::PathBuf, time::Duration};
+use std::{path::PathBuf, time::Duration};
 
 use crate::{
+    error::Result,
     game::Game,
     storage::LeaderboardStorage,
     utility::{GameTimer, Penalty},
 };
 
+mod error;
 mod event;
 mod game;
 mod storage;
@@ -14,7 +16,7 @@ mod utility;
 
 const VERSION: &str = "0.6";
 
-fn setup_data_dir() -> Result<PathBuf, Box<dyn Error>> {
+fn setup_data_dir() -> Result<PathBuf> {
     let datadir = utility::get_app_data_dir()?;
     if !datadir.exists() {
         std::fs::create_dir(&datadir)?;
@@ -28,7 +30,7 @@ fn setup_data_dir() -> Result<PathBuf, Box<dyn Error>> {
     Ok(datadir)
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let mut store = match setup_data_dir() {
         Ok(dir) => LeaderboardStorage::open(dir.join("db.sqlite3")),
         Err(e) => {
