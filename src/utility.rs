@@ -1,7 +1,18 @@
-use std::{cell::Cell, fmt::Display, time::Duration};
+use std::{
+    cell::Cell,
+    error::Error,
+    fmt::Display,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use chrono::{DateTime, TimeDelta, Utc};
-use crossterm::{style::Stylize, ExecutableCommand};
+use crossterm::{
+    cursor,
+    style::Stylize,
+    terminal::{self, ClearType},
+    ExecutableCommand,
+};
 
 use crate::strategem::{Strategem, StrategemClass, StrategemDifficulty};
 
@@ -130,6 +141,49 @@ impl Display for Multiplier {
     }
 }
 
+pub struct ScreenWriter {
+    lines_count: u16,
+}
+
+impl ScreenWriter {
+    pub fn new() -> Self {
+        Self { lines_count: 0 }
+    }
+
+    pub fn clear() -> std::io::Result<()> {
+        std::io::stdout().execute(terminal::Clear(ClearType::FromCursorDown))?;
+        Ok(())
+    }
+}
+
+impl std::io::Write for ScreenWriter {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.lines_count += 1;
+        std::io::stdout().write(buf)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        std::io::stdout().flush()
+    }
+
+    fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> std::io::Result<()> {
+        fmt.to_string()
+            .chars()
+            .filter(|ch| ch.eq(&'\n'))
+            .for_each(|_| self.lines_count += 1);
+
+        std::io::stdout().write_fmt(fmt)
+    }
+}
+
+impl Drop for ScreenWriter {
+    fn drop(&mut self) {
+        std::io::stdout()
+            .execute(cursor::MoveUp(self.lines_count))
+            .unwrap();
+    }
+}
+
 pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier) -> usize {
     use Multiplier::*;
     use StrategemDifficulty::*;
@@ -181,5 +235,87 @@ pub fn format_strategem_name(strategem: &Strategem) -> String {
                 " ".on_red()
             )
         }
+    }
+}
+
+pub fn get_app_data_dir() -> Result<PathBuf, Box<dyn Error>> {
+    const GAME_DIR: &str = "strategem-hero";
+
+    #[cfg(target_os = "windows")]
+    {
+        // C:\Users\<Account>\AppData\Roaming\<AppName>
+        let appdata = std::env::var("APPDATA")?;
+        let appdata_path = Path::new(&appdata);
+        Ok(appdata_path.join(GAME_DIR))
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        // /home/<account>/.local/share/<AppName>
+        let home = std::env::var("HOME")?;
+        let homepath = Path::new(&home);
+        Ok(homepath.join(".local").join("share").join(GAME_DIR))
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        // /Users/<Account>/Library/Application Support/<AppName>
+        let home = std::env::var("HOME")?;
+        let homepath = Path::new(&home);
+        Ok(homepath
+            .join("Library")
+            .join("Application Support")
+            .join(GAME_DIR))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn windows_app_data_dir() {
+        let username = std::env::var("USERNAME").unwrap();
+        let path = get_app_data_dir();
+
+        assert_eq!(
+            Path::new("C:\\Users")
+                .join(&username)
+                .join("AppData")
+                .join("Roaming")
+                .join("strategem-hero"),
+            path.unwrap()
+        );
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn linux_app_data_dir() {
+        let homepath = std::env::var("HOME").unwrap();
+        let path = get_app_data_dir();
+
+        assert_eq!(
+            Path::new(&homepath)
+                .join(".local")
+                .join("share")
+                .join("strategem-hero"),
+            path.unwrap()
+        );
+    }
+
+    #[test]
+    #[cfg(target_os = "macos")]
+    fn macos_app_data_dir() {
+        let homepath = std::env::var("HOME").unwrap();
+        let path = get_app_data_dir();
+
+        assert_eq!(
+            Path::new(&homepath)
+                .join("Library")
+                .join("Application Support")
+                .join("strategem-hero"),
+            path.unwrap()
+        );
     }
 }
