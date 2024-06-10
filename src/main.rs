@@ -56,11 +56,16 @@ fn main() -> Result<()> {
     if let Some(arg) = std::env::args().nth(1) {
         if arg.eq("leaderboard") {
             store
-                .select_all()
-                .unwrap()
+                .select_all()?
                 .iter()
                 .enumerate()
                 .for_each(|(i, rec)| println!("  {}. {:<18} {}", i + 1, rec.nickname, rec.score));
+            return Ok(());
+        } else if arg.eq("delete-data") {
+            store.close()?;
+            let datadir = utility::get_app_data_dir()?;
+            std::fs::remove_dir_all(datadir)?;
+            println!("Deleted all game-related data successfully");
             return Ok(());
         }
     }

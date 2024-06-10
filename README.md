@@ -14,6 +14,9 @@ This is simple cli game written in Rust, copying (actually just loosely followin
   - Hard - from 7 and above inputs
 - Each level of strategems gives different score
 - Tracking of best score between launches
+- Subcommands to:
+  - Print leaderboard: `strategem-hero leaderboard`
+  - Delete all game files: `strategem-hero delete-data`
 
 ## How to play
 

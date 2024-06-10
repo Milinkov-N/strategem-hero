@@ -168,4 +168,8 @@ impl LeaderboardStorage {
             _ => None,
         }
     }
+
+    pub fn close(self) -> Result<()> {
+        Ok(self.conn.close().map_err(|(_, e)| e)?)
+    }
 }
