@@ -282,7 +282,9 @@ mod tests {
         assert_eq!(
             Path::new("C:\\Users")
                 .join(&username)
-                .join("AppData\\Roaming\\strategem-hero"),
+                .join("AppData")
+                .join("Roaming")
+                .join("strategem-hero"),
             path.unwrap()
         );
     }
@@ -294,7 +296,10 @@ mod tests {
         let path = get_app_data_dir();
 
         assert_eq!(
-            Path::new(&homepath).join(".local\\share\\strategem-hero"),
+            Path::new(&homepath)
+                .join(".local")
+                .join("share")
+                .join("strategem-hero"),
             path.unwrap()
         );
     }
@@ -306,7 +311,10 @@ mod tests {
         let path = get_app_data_dir();
 
         assert_eq!(
-            Path::new(&homepath).join("Library\\Application Support\\strategem-hero"),
+            Path::new(&homepath)
+                .join("Library")
+                .join("Application Support")
+                .join("strategem-hero"),
             path.unwrap()
         );
     }
