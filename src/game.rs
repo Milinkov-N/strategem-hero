@@ -1,16 +1,11 @@
-use std::time::Duration;
+use std::{io::Write, time::Duration};
 
-use crossterm::{
-    cursor,
-    event::{Event, KeyCode, KeyEvent, KeyEventKind},
-    terminal::{self, ClearType},
-    ExecutableCommand,
-};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
 use crate::{
     event::Key,
     strategem::Strategem,
-    utility::{self, GameTimer, HideCursor, Multiplier, Penalty},
+    utility::{self, GameTimer, HideCursor, Multiplier, Penalty, ScreenWriter},
 };
 
 struct GameState {
@@ -59,34 +54,13 @@ impl Game {
         let _guard = HideCursor::hide()?;
 
         while self.is_running {
-            let GameState {
-                score,
-                strategem,
-                game_timer,
-                streak,
-                ..
-            } = &mut self.state;
-
             if crossterm::event::poll(Duration::from_millis(17))? {
                 self.handle_input()?;
             } else {
-                print!("Score: {} {}\n", score, Multiplier::get(*streak));
-                print!("{game_timer}\n");
-                println!("{strategem}");
+                self.print_frame()?;
+                self.update_state();
 
-                std::io::stdout().execute(crossterm::cursor::MoveUp(4))?;
-                if strategem.is_completed() {
-                    *streak += 1;
-                    *score +=
-                        utility::get_score_value(strategem.difficulty(), Multiplier::get(*streak));
-                    game_timer.add(Duration::from_millis(1500));
-                    *strategem = crate::strategem::random();
-                } else if !strategem.is_valid() {
-                    *streak = 0;
-                    self.penalty.apply(|| strategem.reset());
-                }
-
-                if game_timer.is_over() {
+                if self.state.game_timer.is_over() {
                     self.handle_game_over()?;
                 }
             }
@@ -98,9 +72,7 @@ impl Game {
     fn handle_input(&mut self) -> std::io::Result<()> {
         match crate::event::read()? {
             Some(Key::Escape) => {
-                std::io::stdout()
-                    .execute(cursor::MoveUp(4))?
-                    .execute(terminal::Clear(ClearType::FromCursorDown))?;
+                ScreenWriter::clear()?;
                 self.is_running = false;
             }
             Some(key) => self.state.strategem.assert_key(key.into()),
@@ -111,61 +83,79 @@ impl Game {
         Ok(())
     }
 
+    fn print_frame(&mut self) -> std::io::Result<()> {
+        let mut screen = ScreenWriter::new();
+        writeln!(
+            screen,
+            "Score: {} {}",
+            self.state.score,
+            Multiplier::get(self.state.streak)
+        )?;
+        writeln!(screen, "{}", self.state.game_timer)?;
+        writeln!(screen, "{}", self.state.strategem)
+    }
+
+    fn update_state(&mut self) {
+        let GameState {
+            score,
+            strategem,
+            game_timer,
+            streak,
+            ..
+        } = &mut self.state;
+
+        if strategem.is_completed() {
+            *streak += 1;
+            *score += utility::get_score_value(strategem.difficulty(), Multiplier::get(*streak));
+            game_timer.add(Duration::from_millis(1500));
+            *strategem = crate::strategem::random();
+        } else if !strategem.is_valid() {
+            *streak = 0;
+            self.penalty.apply(|| strategem.reset());
+        }
+    }
+
     fn handle_game_over(&mut self) -> std::io::Result<()> {
-        std::io::stdout().execute(terminal::Clear(ClearType::FromCursorDown))?;
-        println!("Game Over!");
+        let mut screen = ScreenWriter::new();
+
+        ScreenWriter::clear()?;
+        writeln!(screen, "Game Over!")?;
 
         if self.state.score > self.state.best_score {
             self.state.best_score = self.state.score;
         }
 
-        println!("Best score: {}", self.state.best_score);
-        println!("Your score: {}", self.state.score);
+        writeln!(screen, "Best score: {}", self.state.best_score)?;
+        writeln!(screen, "Your score: {}", self.state.score)?;
+        writeln!(screen, "Restart the game [y/n]?")?;
 
-        self.yes_no_prompt(
-            "Restart the game",
-            |this| {
-                this.state.reset();
-                std::io::stdout()
-                    .execute(cursor::MoveUp(4))?
-                    .execute(terminal::Clear(ClearType::FromCursorDown))?;
-                Ok(())
-            },
-            |this| this.is_running = false,
-        )?;
+        if self.confirm_action()? {
+            self.state.reset();
+        } else {
+            self.is_running = false;
+        }
 
-        Ok(())
+        drop(screen);
+        ScreenWriter::clear()
     }
 
-    fn yes_no_prompt(
-        &mut self,
-        msg: &str,
-        on_yes: impl FnOnce(&mut Game) -> std::io::Result<()>,
-        on_no: impl FnOnce(&mut Game),
-    ) -> std::io::Result<()> {
-        println!("{msg} [y/n]?");
+    fn confirm_action(&mut self) -> std::io::Result<bool> {
         while let Event::Key(ev) = crossterm::event::read()? {
             match ev {
                 KeyEvent {
                     code: KeyCode::Char('y'),
                     kind: KeyEventKind::Press,
                     ..
-                } => {
-                    on_yes(self)?;
-                    break;
-                }
+                } => return Ok(true),
                 KeyEvent {
                     code: KeyCode::Char('n'),
                     kind: KeyEventKind::Press,
                     ..
-                } => {
-                    on_no(self);
-                    break;
-                }
+                } => return Ok(false),
                 _ => (),
             }
         }
 
-        Ok(())
+        unreachable!()
     }
 }

@@ -7,7 +7,12 @@ use std::{
 };
 
 use chrono::{DateTime, TimeDelta, Utc};
-use crossterm::{style::Stylize, ExecutableCommand};
+use crossterm::{
+    cursor,
+    style::Stylize,
+    terminal::{self, ClearType},
+    ExecutableCommand,
+};
 
 use crate::strategem::{Strategem, StrategemClass, StrategemDifficulty};
 
@@ -133,6 +138,49 @@ impl Display for Multiplier {
                 Multiplier::ThirdTier => "x3".dark_magenta(),
             }
         )
+    }
+}
+
+pub struct ScreenWriter {
+    lines_count: u16,
+}
+
+impl ScreenWriter {
+    pub fn new() -> Self {
+        Self { lines_count: 0 }
+    }
+
+    pub fn clear() -> std::io::Result<()> {
+        std::io::stdout().execute(terminal::Clear(ClearType::FromCursorDown))?;
+        Ok(())
+    }
+}
+
+impl std::io::Write for ScreenWriter {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.lines_count += 1;
+        std::io::stdout().write(buf)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        std::io::stdout().flush()
+    }
+
+    fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> std::io::Result<()> {
+        fmt.to_string()
+            .chars()
+            .filter(|ch| ch.eq(&'\n'))
+            .for_each(|_| self.lines_count += 1);
+
+        std::io::stdout().write_fmt(fmt)
+    }
+}
+
+impl Drop for ScreenWriter {
+    fn drop(&mut self) {
+        std::io::stdout()
+            .execute(cursor::MoveUp(self.lines_count))
+            .unwrap();
     }
 }
 
