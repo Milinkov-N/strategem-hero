@@ -44,10 +44,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     };
 
-    let game_timer = GameTimer::start_from(Duration::from_secs(30));
-    let penalty = Penalty::new(250, 10);
-    let mut game = Game::new(game_timer, penalty);
-
     #[cfg(debug_assertions)]
     {
         store.drop_schema()?;
@@ -55,10 +51,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     store.init_schema()?;
     store.seed_schema()?;
 
-    store
-        .select_all()?
-        .iter()
-        .for_each(|rec| println!("\t{:>18} {}", rec.nickname, rec.score));
+    let game_timer = GameTimer::start_from(Duration::from_secs(10));
+    let penalty = Penalty::new(250, 10);
+    let mut game = Game::new(store, game_timer, penalty);
 
     Ok(game.run()?)
 }

@@ -4,6 +4,7 @@ use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
 use crate::{
     event::Key,
+    storage::LeaderboardStorage,
     strategem::Strategem,
     utility::{self, GameTimer, HideCursor, Multiplier, Penalty, ScreenWriter},
 };
@@ -11,7 +12,6 @@ use crate::{
 struct GameState {
     game_timer: GameTimer,
     score: usize,
-    best_score: usize,
     streak: usize,
     strategem: Strategem,
 }
@@ -21,7 +21,6 @@ impl GameState {
         Self {
             game_timer,
             score: 0,
-            best_score: 0,
             streak: 0,
             strategem: crate::strategem::random(),
         }
@@ -37,14 +36,16 @@ impl GameState {
 
 pub struct Game {
     state: GameState,
+    store: LeaderboardStorage,
     penalty: Penalty,
     is_running: bool,
 }
 
 impl Game {
-    pub fn new(game_timer: GameTimer, penalty: Penalty) -> Self {
+    pub fn new(store: LeaderboardStorage, game_timer: GameTimer, penalty: Penalty) -> Self {
         Self {
             state: GameState::new(game_timer),
+            store,
             penalty,
             is_running: true,
         }
@@ -117,16 +118,45 @@ impl Game {
 
     fn handle_game_over(&mut self) -> std::io::Result<()> {
         let mut screen = ScreenWriter::new();
+        let player = self.store.find_by_name("You").ok_or(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "Player not found in database",
+        ))?;
 
         ScreenWriter::clear()?;
-        writeln!(screen, "Game Over!")?;
+        writeln!(
+            screen,
+            "Game Over! You scored {} Democracy Points",
+            self.state.score
+        )?;
 
-        if self.state.score > self.state.best_score {
-            self.state.best_score = self.state.score;
+        if self.state.score > player.score {
+            self.store
+                .insert_or_update(&player.nickname, self.state.score)
+                .unwrap();
         }
 
-        writeln!(screen, "Best score: {}", self.state.best_score)?;
-        writeln!(screen, "Your score: {}", self.state.score)?;
+        writeln!(screen, "Leaderboard:")?;
+        self.store
+            .select_all()
+            .unwrap()
+            .iter()
+            .enumerate()
+            .for_each(|(i, rec)| {
+                if rec.nickname.eq("You") && rec.score > player.score {
+                    writeln!(
+                        screen,
+                        "  {}. {:<18} {} New record!",
+                        i + 1,
+                        rec.nickname,
+                        rec.score
+                    )
+                    .unwrap();
+                } else {
+                    writeln!(screen, "  {}. {:<18} {}", i + 1, rec.nickname, rec.score).unwrap();
+                }
+            });
+
         writeln!(screen, "Restart the game [y/n]?")?;
 
         if self.confirm_action()? {

@@ -154,27 +154,7 @@ impl LeaderboardStorage {
         }
     }
 
-    pub fn select_best_score(&mut self) -> Result<(String, usize), Box<dyn Error>> {
-        let sql = SqlBuilder::select_from(Self::TABLE_NAME)
-            .fields(&["nickname", "score"])
-            .order_desc("score")
-            .limit(1)
-            .sql()?;
-
-        let mut stmt = self.conn.prepare(&sql)?;
-        let mut rows = stmt.query([])?;
-
-        if let Some(row) = rows.next()? {
-            let nickname = row.get::<_, String>(0)?;
-            let score = row.get::<_, usize>(1)?;
-
-            return Ok((nickname, score));
-        }
-
-        Err("no rows found".into())
-    }
-
-    fn find_by_name(&mut self, nickname: &str) -> Option<Record> {
+    pub fn find_by_name(&mut self, nickname: &str) -> Option<Record> {
         let sql = SqlBuilder::select_from(Self::TABLE_NAME)
             .fields(Self::TABLE_FIELDS)
             .and_where("nickname = ?1")
