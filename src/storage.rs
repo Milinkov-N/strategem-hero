@@ -86,6 +86,7 @@ impl LeaderboardStorage {
         Ok(())
     }
 
+    #[cfg(debug_assertions)]
     pub fn drop_schema(&mut self) -> Result<()> {
         let mut stmt = self
             .conn

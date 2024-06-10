@@ -33,13 +33,13 @@ fn setup_data_dir() -> Result<PathBuf> {
 fn main() -> Result<()> {
     let mut store = match setup_data_dir() {
         Ok(dir) => LeaderboardStorage::open(dir.join("db.sqlite3")),
-        Err(e) => {
+        Err(_e) => {
             println!("warning: unable to locate leaderboard data.");
             println!("warning: all progress will be lost after this session.");
 
             #[cfg(debug_assertions)]
             {
-                eprintln!("{e}");
+                eprintln!("{_e}");
             }
 
             LeaderboardStorage::open_in_memory()
@@ -52,6 +52,18 @@ fn main() -> Result<()> {
     }
     store.init_schema()?;
     store.seed_schema()?;
+
+    if let Some(arg) = std::env::args().nth(1) {
+        if arg.eq("leaderboard") {
+            store
+                .select_all()
+                .unwrap()
+                .iter()
+                .enumerate()
+                .for_each(|(i, rec)| println!("  {}. {:<18} {}", i + 1, rec.nickname, rec.score));
+            return Ok(());
+        }
+    }
 
     let game_timer = GameTimer::start_from(Duration::from_secs(30));
     let penalty = Penalty::new(250, 10);

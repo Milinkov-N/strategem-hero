@@ -137,6 +137,21 @@ impl Game {
                 .unwrap();
         }
 
+        self.print_leaderboard(&mut screen, player.score)?;
+
+        writeln!(screen, "Restart the game [y/n]?")?;
+
+        if self.confirm_action()? {
+            self.state.reset();
+        } else {
+            self.is_running = false;
+        }
+
+        drop(screen);
+        ScreenWriter::clear()
+    }
+
+    fn print_leaderboard(&mut self, screen: &mut ScreenWriter, curr_score: usize) -> Result<()> {
         writeln!(screen, "Leaderboard:")?;
         self.store
             .select_all()
@@ -144,7 +159,7 @@ impl Game {
             .iter()
             .enumerate()
             .for_each(|(i, rec)| {
-                if rec.nickname.eq("You") && rec.score > player.score {
+                if rec.nickname.eq("You") && rec.score > curr_score {
                     writeln!(
                         screen,
                         "  {}. {:<18} {} New record!",
@@ -158,16 +173,7 @@ impl Game {
                 }
             });
 
-        writeln!(screen, "Restart the game [y/n]?")?;
-
-        if self.confirm_action()? {
-            self.state.reset();
-        } else {
-            self.is_running = false;
-        }
-
-        drop(screen);
-        ScreenWriter::clear()
+        Ok(())
     }
 
     fn confirm_action(&mut self) -> Result<bool> {
