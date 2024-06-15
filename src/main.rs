@@ -1,5 +1,7 @@
 use std::{path::PathBuf, time::Duration};
 
+use event::Controls;
+
 use crate::{
     error::Result,
     game::Game,
@@ -72,7 +74,12 @@ fn main() -> Result<()> {
 
     let game_timer = GameTimer::start_from(Duration::from_secs(30));
     let penalty = Penalty::new(250, 10);
-    let mut game = Game::new(store, game_timer, penalty);
+    let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
+        Controls::wasd()
+    } else {
+        Controls::arrows()
+    };
+    let mut game = Game::new(store, game_timer, controls, penalty);
 
     Ok(game.run()?)
 }
