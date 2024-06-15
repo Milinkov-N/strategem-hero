@@ -1,31 +1,50 @@
+use std::fmt::Display;
+
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
 use crate::error::Result;
 
 pub struct Controls {
-    up: crossterm::event::KeyCode,
-    down: crossterm::event::KeyCode,
-    left: crossterm::event::KeyCode,
-    right: crossterm::event::KeyCode,
+    up: KeyCode,
+    down: KeyCode,
+    left: KeyCode,
+    right: KeyCode,
 }
 
 impl Controls {
     pub fn wasd() -> Self {
         Self {
-            up: crossterm::event::KeyCode::Char('w'),
-            left: crossterm::event::KeyCode::Char('a'),
-            down: crossterm::event::KeyCode::Char('s'),
-            right: crossterm::event::KeyCode::Char('d'),
+            up: KeyCode::Char('w'),
+            left: KeyCode::Char('a'),
+            down: KeyCode::Char('s'),
+            right: KeyCode::Char('d'),
         }
     }
 
     pub fn arrows() -> Self {
         Self {
-            up: crossterm::event::KeyCode::Up,
-            left: crossterm::event::KeyCode::Left,
-            down: crossterm::event::KeyCode::Down,
-            right: crossterm::event::KeyCode::Right,
+            up: KeyCode::Up,
+            left: KeyCode::Left,
+            down: KeyCode::Down,
+            right: KeyCode::Right,
         }
+    }
+}
+
+impl Display for Controls {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}  - {}, {}  - {}, {}  - {}, {}  - {}",
+            crate::strategem::StrategemKey::Left,
+            format_key_code(&self.left),
+            crate::strategem::StrategemKey::Up,
+            format_key_code(&self.up),
+            crate::strategem::StrategemKey::Right,
+            format_key_code(&self.right),
+            crate::strategem::StrategemKey::Down,
+            format_key_code(&self.down),
+        )
     }
 }
 
@@ -66,5 +85,16 @@ pub fn read(controls: &Controls) -> Result<Option<Key>> {
             ..
         }) => Ok(Some(Key::Escape)),
         _ => Ok(None),
+    }
+}
+
+fn format_key_code(code: &KeyCode) -> String {
+    match code {
+        KeyCode::Char(ch) => format!("'{ch}'"),
+        KeyCode::Up => format!("ArrowUp"),
+        KeyCode::Left => format!("ArrowLeft"),
+        KeyCode::Down => format!("ArrowDown"),
+        KeyCode::Right => format!("ArrowRight"),
+        other => format!("{other:?}"),
     }
 }

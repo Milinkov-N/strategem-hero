@@ -101,7 +101,9 @@ impl Game {
             Multiplier::get(self.state.streak)
         )?;
         writeln!(screen, "{}", self.state.game_timer)?;
-        Ok(writeln!(screen, "{}", self.state.strategem)?)
+        writeln!(screen, "{}", self.state.strategem)?;
+        writeln!(screen, "Controls: {}", self.controls)?;
+        Ok(())
     }
 
     fn update_state(&mut self) {
