@@ -53,7 +53,7 @@ impl Display for GameTimer {
         let step = self.initial_duration.as_secs() / 10;
         let remaining_steps = self.remaining().num_seconds() / step as i64 + 1;
         let time_left = self.remaining();
-        let steps_str = "#".repeat(remaining_steps as usize);
+        let steps_str = "#".repeat(remaining_steps.max(10) as usize);
 
         write!(
             f,
@@ -63,7 +63,7 @@ impl Display for GameTimer {
                 3..=5 => steps_str.dark_yellow(),
                 _ => steps_str.green(),
             },
-            " ".repeat(10 - remaining_steps as usize),
+            " ".repeat(10 - remaining_steps.min(10) as usize),
             time_left.num_seconds(),
             (time_left.num_milliseconds() - time_left.num_seconds() * 1000) / 100
         )
