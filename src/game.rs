@@ -4,7 +4,7 @@ use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 
 use crate::{
     error::Result,
-    event::Key,
+    event::{Controls, Key},
     storage::LeaderboardStorage,
     strategem::Strategem,
     utility::{self, GameTimer, HideCursor, Multiplier, Penalty, ScreenWriter},
@@ -39,15 +39,22 @@ pub struct Game {
     state: GameState,
     store: LeaderboardStorage,
     penalty: Penalty,
+    controls: Controls,
     is_running: bool,
 }
 
 impl Game {
-    pub fn new(store: LeaderboardStorage, game_timer: GameTimer, penalty: Penalty) -> Self {
+    pub fn new(
+        store: LeaderboardStorage,
+        game_timer: GameTimer,
+        controls: Controls,
+        penalty: Penalty,
+    ) -> Self {
         Self {
             state: GameState::new(game_timer),
             store,
             penalty,
+            controls,
             is_running: true,
         }
     }
@@ -72,7 +79,7 @@ impl Game {
     }
 
     fn handle_input(&mut self) -> Result<()> {
-        match crate::event::read()? {
+        match crate::event::read(&self.controls)? {
             Some(Key::Escape) => {
                 ScreenWriter::clear()?;
                 self.is_running = false;
