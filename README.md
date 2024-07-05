@@ -37,3 +37,16 @@ cargo run --release
 # or run this command if you just need to build the binary
 cargo build --release
 ```
+
+## Game Files
+
+As of now in version 0.7.\* the only game file is sqlite database located in
+folders as follows:
+
+- Windows: `C:\Users\<User>\AppData\Roaming\strategem-hero`
+- MacOS: `$HOME/Library/Application Support/strategem-hero`
+- Linux: `$HOME/.local/share/strategem-hero`
+
+And for each minor or major version there is different folder (mostly for me to not worry about database migrations).
+
+> Note: `strategem-hero delete-data` command deletes whole game folder.
