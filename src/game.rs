@@ -198,10 +198,10 @@ impl Game {
                     kind: KeyEventKind::Press,
                     ..
                 } => return Ok(false),
-                _ => (),
+                _ => return Ok(false),
             }
         }
 
-        unreachable!()
+        Ok(false)
     }
 }
