@@ -7,7 +7,8 @@ use crate::{
     event::{Controls, Key},
     storage::LeaderboardStorage,
     strategem::Strategem,
-    utility::{self, GameTimer, HideCursor, Multiplier, Penalty, ScreenWriter},
+    tui::{HideCursor, ScreenWriter},
+    utility::{self, GameTimer, Multiplier, Penalty},
 };
 
 struct GameState {

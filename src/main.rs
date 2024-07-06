@@ -1,13 +1,13 @@
 use std::{io::Write, path::PathBuf, time::Duration};
 
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
-use event::Controls;
-use utility::ScreenWriter;
 
 use crate::{
     error::Result,
+    event::Controls,
     game::Game,
     storage::LeaderboardStorage,
+    tui::ScreenWriter,
     utility::{GameTimer, Penalty},
 };
 
@@ -16,6 +16,7 @@ mod event;
 mod game;
 mod storage;
 mod strategem;
+mod tui;
 mod utility;
 
 const VERSION: &str = "0.7";
