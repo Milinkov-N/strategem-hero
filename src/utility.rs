@@ -6,12 +6,7 @@ use std::{
 };
 
 use chrono::{DateTime, TimeDelta, Utc};
-use crossterm::{
-    cursor,
-    style::Stylize,
-    terminal::{self, ClearType},
-    ExecutableCommand,
-};
+use crossterm::style::Stylize;
 
 use crate::{
     error::Result,
