@@ -1,13 +1,11 @@
 use std::{io::Write, time::Duration};
 
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
-
 use crate::{
     error::Result,
     event::{Controls, Key},
     storage::LeaderboardStorage,
     strategem::Strategem,
-    tui::{HideCursor, ScreenWriter},
+    tui::{self, HideCursor, ScreenWriter},
     utility::{self, GameTimer, Multiplier, Penalty},
 };
 
@@ -151,7 +149,7 @@ impl Game {
 
         writeln!(screen, "Restart the game [y/n]?")?;
 
-        if self.confirm_action()? {
+        if tui::confirm_action()? {
             self.state.reset();
         } else {
             self.is_running = false;
@@ -184,25 +182,5 @@ impl Game {
             });
 
         Ok(())
-    }
-
-    fn confirm_action(&mut self) -> Result<bool> {
-        while let Event::Key(ev) = crossterm::event::read()? {
-            match ev {
-                KeyEvent {
-                    code: KeyCode::Char('y'),
-                    kind: KeyEventKind::Press,
-                    ..
-                } => return Ok(true),
-                KeyEvent {
-                    code: KeyCode::Char('n'),
-                    kind: KeyEventKind::Press,
-                    ..
-                } => return Ok(false),
-                _ => return Ok(false),
-            }
-        }
-
-        Ok(false)
     }
 }

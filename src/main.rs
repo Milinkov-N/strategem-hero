@@ -1,6 +1,6 @@
-use std::{io::Write, path::PathBuf, time::Duration};
+use std::io::Write;
 
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
+use std::{path::PathBuf, time::Duration};
 
 use crate::{
     error::Result,
@@ -86,68 +86,47 @@ fn main() -> Result<()> {
 
     let mut screen = ScreenWriter::new();
     writeln!(screen, "{LOGO}")?;
-    writeln!(screen, "Press key in [] brackets to choose an action.")?;
-    writeln!(screen, "1. [S]tart Game")?;
-    writeln!(screen, "2. [L]eaderboard")?;
-    writeln!(screen, "3. [D]elete Data")?;
-    writeln!(screen, "4. [Q]uit")?;
 
-    while let Event::Key(ev) = crossterm::event::read()? {
-        match ev {
-            KeyEvent {
-                code: KeyCode::Char('s'),
-                kind: KeyEventKind::Press,
-                ..
-            } => {
-                let game_timer = GameTimer::start_from(Duration::from_secs(30));
-                let penalty = Penalty::new(250, 10);
-                let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
-                    Controls::wasd()
-                } else {
-                    Controls::arrows()
-                };
-                let mut game = Game::new(store, game_timer, controls, penalty);
-                drop(screen);
-                ScreenWriter::clear()?;
-                game.run()?;
-                break;
-            }
-
-            KeyEvent {
-                code: KeyCode::Char('l'),
-                kind: KeyEventKind::Press,
-                ..
-            } => {
-                drop(screen);
-                ScreenWriter::clear()?;
-                store.select_all()?.iter().enumerate().for_each(|(i, rec)| {
-                    println!("  {}. {:<18} {}", i + 1, rec.nickname, rec.score)
-                });
-                break;
-            }
-
-            KeyEvent {
-                code: KeyCode::Char('d'),
-                kind: KeyEventKind::Press,
-                ..
-            } => {
-                drop(screen);
-                ScreenWriter::clear()?;
-                store.close()?;
-                let datadir = utility::get_app_data_dir()?;
-                std::fs::remove_dir_all(datadir)?;
-                println!("Deleted all game-related data successfully");
-                break;
-            }
-
-            KeyEvent {
-                code: KeyCode::Char('q'),
-                kind: KeyEventKind::Press,
-                ..
-            } => break,
-
-            _ => (),
+    match tui::select_from_list(
+        Some(screen),
+        Some("Press key in [] brackets to choose an action."),
+        vec![
+            ("[S]tart Game", 's'),
+            ("[L]eaderboard", 'l'),
+            ("[D]elete Data", 'd'),
+            ("[Q]uit", 'q'),
+        ],
+    )? {
+        0 => {
+            let game_timer = GameTimer::start_from(Duration::from_secs(30));
+            let penalty = Penalty::new(250, 10);
+            let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
+                Controls::wasd()
+            } else {
+                Controls::arrows()
+            };
+            let mut game = Game::new(store, game_timer, controls, penalty);
+            game.run()?;
         }
+
+        1 => {
+            store
+                .select_all()?
+                .iter()
+                .enumerate()
+                .for_each(|(i, rec)| println!("  {}. {:<18} {}", i + 1, rec.nickname, rec.score));
+        }
+
+        2 => {
+            store.close()?;
+            let datadir = utility::get_app_data_dir()?;
+            std::fs::remove_dir_all(datadir)?;
+            println!("Deleted all game-related data successfully");
+        }
+
+        3 => (),
+
+        _ => (),
     }
 
     Ok(())

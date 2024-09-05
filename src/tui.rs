@@ -1,5 +1,8 @@
+use std::io::Write;
+
 use crossterm::{
     cursor,
+    event::{Event, KeyCode, KeyEvent, KeyEventKind},
     terminal::{self, ClearType},
     ExecutableCommand,
 };
@@ -64,4 +67,66 @@ impl Drop for HideCursorGuard {
     fn drop(&mut self) {
         std::io::stdout().execute(crossterm::cursor::Show).unwrap();
     }
+}
+
+pub fn confirm_action() -> Result<bool> {
+    while let Event::Key(ev) = crossterm::event::read()? {
+        match ev {
+            KeyEvent {
+                code: KeyCode::Char('y'),
+                kind: KeyEventKind::Press,
+                ..
+            } => return Ok(true),
+            KeyEvent {
+                code: KeyCode::Char('n'),
+                kind: KeyEventKind::Press,
+                ..
+            } => return Ok(false),
+            _ => return Ok(false),
+        }
+    }
+
+    Ok(false)
+}
+
+pub fn select_from_list(
+    screen: Option<ScreenWriter>,
+    prompt: Option<&str>,
+    list: Vec<(&str, char)>,
+) -> Result<usize> {
+    let mut screen = match screen {
+        Some(screen) => screen,
+        None => ScreenWriter::new(),
+    };
+
+    if let Some(msg) = prompt {
+        writeln!(screen, "{msg}")?;
+    }
+
+    list.iter()
+        .enumerate()
+        .for_each(|(i, (msg, _))| writeln!(screen, "{}. {msg}", i + 1).unwrap());
+
+    while let Event::Key(ev) = crossterm::event::read()? {
+        match ev {
+            KeyEvent {
+                code,
+                kind: KeyEventKind::Press,
+                ..
+            } => {
+                if let Some(idx) = list.iter().position(|(_, ch)| code.eq(&KeyCode::Char(*ch))) {
+                    drop(screen);
+                    ScreenWriter::clear()?;
+                    return Ok(idx);
+                }
+            }
+
+            _ => (),
+        }
+    }
+
+    drop(screen);
+    ScreenWriter::clear()?;
+
+    Ok(0)
 }
