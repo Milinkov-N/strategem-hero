@@ -6,7 +6,7 @@ use std::{
 };
 
 use chrono::{DateTime, TimeDelta, Utc};
-use crossterm::style::Stylize;
+use crossterm::{cursor, style::Stylize, terminal, ExecutableCommand};
 
 use crate::{
     error::Result,
@@ -131,7 +131,7 @@ impl ScreenWriter {
     }
 
     pub fn clear() -> Result<()> {
-        std::io::stdout().execute(terminal::Clear(ClearType::FromCursorDown))?;
+        std::io::stdout().execute(terminal::Clear(terminal::ClearType::FromCursorDown))?;
         Ok(())
     }
 }
