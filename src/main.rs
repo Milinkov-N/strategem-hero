@@ -83,6 +83,8 @@ fn main() -> Result<()> {
         }
     }
 
+    crossterm::terminal::enable_raw_mode()?;
+
     let mut screen = ScreenWriter::new();
     writeln!(screen, "{LOGO}")?;
     writeln!(screen, "Press key in [] brackets to choose an action.")?;
@@ -148,6 +150,8 @@ fn main() -> Result<()> {
             _ => (),
         }
     }
+
+    crossterm::terminal::disable_raw_mode()?;
 
     Ok(())
 }
