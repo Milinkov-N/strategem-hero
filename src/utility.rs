@@ -6,12 +6,7 @@ use std::{
 };
 
 use chrono::{DateTime, TimeDelta, Utc};
-use crossterm::{
-    cursor,
-    style::Stylize,
-    terminal::{self, ClearType},
-    ExecutableCommand,
-};
+use crossterm::{cursor, style::Stylize, terminal, ExecutableCommand};
 
 use crate::{
     error::Result,
@@ -95,23 +90,6 @@ impl Penalty {
     }
 }
 
-pub struct HideCursor;
-
-impl HideCursor {
-    pub fn hide() -> Result<HideCursorGuard> {
-        std::io::stdout().execute(crossterm::cursor::Hide)?;
-        Ok(HideCursorGuard)
-    }
-}
-
-pub struct HideCursorGuard;
-
-impl Drop for HideCursorGuard {
-    fn drop(&mut self) {
-        std::io::stdout().execute(crossterm::cursor::Show).unwrap();
-    }
-}
-
 pub enum Multiplier {
     FirstTier,
     SecondTier,
@@ -153,7 +131,7 @@ impl ScreenWriter {
     }
 
     pub fn clear() -> Result<()> {
-        std::io::stdout().execute(terminal::Clear(ClearType::FromCursorDown))?;
+        std::io::stdout().execute(terminal::Clear(terminal::ClearType::FromCursorDown))?;
         Ok(())
     }
 }
