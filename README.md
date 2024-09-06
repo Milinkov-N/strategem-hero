@@ -50,3 +50,8 @@ folders as follows:
 And for each minor or major version there is different folder (mostly for me to not worry about database migrations).
 
 > Note: `strategem-hero delete-data` command deletes whole game folder.
+
+## Contribution
+
+If you find bug or some possible impovement in code, please, open an Issue!
+And if you know possible solution, pull request will be greatly appriciated.
