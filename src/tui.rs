@@ -35,12 +35,13 @@ impl std::io::Write for ScreenWriter {
     }
 
     fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> std::io::Result<()> {
-        fmt.to_string()
-            .chars()
+        let fmt = fmt.to_string().replace('\n', "\r\n");
+
+        fmt.chars()
             .filter(|ch| ch.eq(&'\n'))
             .for_each(|_| self.lines_count += 1);
 
-        std::io::stdout().write_fmt(fmt)
+        std::io::stdout().write(fmt.as_bytes()).map(|_| ())
     }
 }
 

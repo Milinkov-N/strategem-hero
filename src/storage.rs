@@ -9,7 +9,7 @@ pub struct Record {
     pub id: usize,
     pub nickname: String,
     pub score: usize,
-    pub last_updated: String,
+    // pub last_updated: String,
 }
 
 impl TryFrom<&Row<'_>> for Record {
@@ -19,13 +19,13 @@ impl TryFrom<&Row<'_>> for Record {
         let id = value.get::<_, usize>(0)?;
         let nickname = value.get::<_, String>(1)?;
         let score = value.get::<_, usize>(2)?;
-        let last_updated = value.get::<_, String>(3)?;
+        let _last_updated = value.get::<_, String>(3)?;
 
         Ok(Self {
             id,
             nickname,
             score,
-            last_updated,
+            // last_updated,
         })
     }
 }
@@ -35,7 +35,7 @@ pub struct LeaderboardStorage {
 }
 
 impl LeaderboardStorage {
-    const TABLE_NAME: &str = "leaderboard";
+    const TABLE_NAME: &'static str = "leaderboard";
     const TABLE_FIELDS: &'static [&'static str] = &["id", "nickname", "score", "last_updated"];
 
     pub fn open(path: PathBuf) -> Self {

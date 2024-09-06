@@ -6,7 +6,7 @@ use std::{
 };
 
 use chrono::{DateTime, TimeDelta, Utc};
-use crossterm::{cursor, style::Stylize, terminal, ExecutableCommand};
+use crossterm::style::Stylize;
 
 use crate::{
     error::Result,
@@ -102,7 +102,7 @@ impl Multiplier {
             0..=5 => Multiplier::FirstTier,
             6..=20 => Multiplier::SecondTier,
             21.. => Multiplier::ThirdTier,
-            _ => unreachable!(),
+            // _ => unreachable!(),
         }
     }
 }
@@ -118,50 +118,6 @@ impl Display for Multiplier {
                 Multiplier::ThirdTier => "x3".dark_magenta(),
             }
         )
-    }
-}
-
-pub struct ScreenWriter {
-    lines_count: u16,
-}
-
-impl ScreenWriter {
-    pub fn new() -> Self {
-        Self { lines_count: 0 }
-    }
-
-    pub fn clear() -> Result<()> {
-        std::io::stdout().execute(terminal::Clear(terminal::ClearType::FromCursorDown))?;
-        Ok(())
-    }
-}
-
-impl std::io::Write for ScreenWriter {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.lines_count += 1;
-        std::io::stdout().write(buf)
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        std::io::stdout().flush()
-    }
-
-    fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> std::io::Result<()> {
-        let fmt = fmt.to_string().replace('\n', "\r\n");
-
-        fmt.chars()
-            .filter(|ch| ch.eq(&'\n'))
-            .for_each(|_| self.lines_count += 1);
-
-        std::io::stdout().write(fmt.as_bytes()).map(|_| ())
-    }
-}
-
-impl Drop for ScreenWriter {
-    fn drop(&mut self) {
-        std::io::stdout()
-            .execute(cursor::MoveUp(self.lines_count))
-            .unwrap();
     }
 }
 
