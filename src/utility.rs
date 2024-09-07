@@ -101,8 +101,7 @@ impl Multiplier {
         match streak {
             0..=5 => Multiplier::FirstTier,
             6..=20 => Multiplier::SecondTier,
-            21.. => Multiplier::ThirdTier,
-            // _ => unreachable!(),
+            _ => Multiplier::ThirdTier,
         }
     }
 }
