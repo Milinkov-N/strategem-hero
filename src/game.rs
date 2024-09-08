@@ -95,7 +95,7 @@ impl Game {
         let mut screen = ScreenWriter::new();
         writeln!(
             screen,
-            "Score: {} {}",
+            "Score: {} {:>5}",
             self.state.score,
             Multiplier::get(self.state.streak)
         )?;

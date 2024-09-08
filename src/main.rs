@@ -116,7 +116,7 @@ fn main() -> Result<()> {
                 .select_all()?
                 .iter()
                 .enumerate()
-                .for_each(|(i, rec)| println!("  {}. {:<18} {}", i + 1, rec.nickname, rec.score));
+                .for_each(|(i, rec)| print!("  {}. {:<18} {}\r\n", i + 1, rec.nickname, rec.score));
         }
 
         2 => {
