@@ -44,9 +44,8 @@ impl Leaderboard {
 
     pub fn save(&self) -> Result<()> {
         let path = utility::data_dir()?.join("leaderboard");
-
-        let mut file = File::open(&path)?;
-        let bytes = bincode::serialize(&self)?;
+        let mut file = File::options().write(true).open(path)?;
+        let bytes = bincode::serialize(self)?;
         file.write_all(&bytes)?;
 
         Ok(())
