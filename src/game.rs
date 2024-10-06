@@ -1,8 +1,4 @@
-use std::{
-    fs::File,
-    io::{Read, Write},
-    time::Duration,
-};
+use std::{io::Write, time::Duration};
 
 use crate::{
     error::Result,
