@@ -1,13 +1,11 @@
 use std::io::Write;
-
 use std::time::Duration;
-
-use storage::Leaderboard;
 
 use crate::{
     error::Result,
     event::Controls,
     game::Game,
+    storage::Leaderboard,
     tui::ScreenWriter,
     utility::{GameTimer, Penalty},
 };
