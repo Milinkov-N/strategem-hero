@@ -1,9 +1,13 @@
-use std::{io::Write, time::Duration};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    time::Duration,
+};
 
 use crate::{
     error::Result,
     event::{Controls, Key},
-    storage::LeaderboardStorage,
+    storage::Leaderboard,
     strategem::Strategem,
     tui::{self, HideCursor, ScreenWriter},
     utility::{self, GameTimer, Multiplier, Penalty},
@@ -36,7 +40,7 @@ impl GameState {
 
 pub struct Game {
     state: GameState,
-    store: LeaderboardStorage,
+    store: Leaderboard,
     penalty: Penalty,
     controls: Controls,
     is_running: bool,
@@ -44,7 +48,7 @@ pub struct Game {
 
 impl Game {
     pub fn new(
-        store: LeaderboardStorage,
+        store: Leaderboard,
         game_timer: GameTimer,
         controls: Controls,
         penalty: Penalty,
@@ -127,10 +131,14 @@ impl Game {
 
     fn handle_game_over(&mut self) -> Result<()> {
         let mut screen = ScreenWriter::new();
-        let player = self.store.find_by_name("You").ok_or(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            "Player not found in database",
-        ))?;
+        let (_, score) =
+            self.store
+                .iter()
+                .find(|rec| rec.0.eq("You"))
+                .ok_or(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "Player not found in database",
+                ))?;
 
         ScreenWriter::clear()?;
         writeln!(
@@ -139,13 +147,11 @@ impl Game {
             self.state.score
         )?;
 
-        if self.state.score > player.score {
-            self.store
-                .insert_or_update(&player.nickname, self.state.score)
-                .unwrap();
+        if &self.state.score > score {
+            self.store.insert("You", self.state.score);
         }
 
-        self.print_leaderboard(&mut screen, player.score)?;
+        self.print_leaderboard(&mut screen, self.state.score)?;
 
         writeln!(screen, "Restart the game [y/n]?")?;
 
@@ -155,6 +161,7 @@ impl Game {
             self.is_running = false;
         }
 
+        self.store.save()?;
         drop(screen);
         ScreenWriter::clear()
     }
@@ -162,22 +169,14 @@ impl Game {
     fn print_leaderboard(&mut self, screen: &mut ScreenWriter, curr_score: usize) -> Result<()> {
         writeln!(screen, "Leaderboard:")?;
         self.store
-            .select_all()
-            .unwrap()
+            .sorted_vec()
             .iter()
             .enumerate()
             .for_each(|(i, rec)| {
-                if rec.nickname.eq("You") && rec.score > curr_score {
-                    writeln!(
-                        screen,
-                        "  {}. {:<18} {} New record!",
-                        i + 1,
-                        rec.nickname,
-                        rec.score
-                    )
-                    .unwrap();
+                if rec.0.eq("You") && rec.1 > &curr_score {
+                    writeln!(screen, "  {}. {:<18} {} New record!", i + 1, rec.0, rec.1).unwrap();
                 } else {
-                    writeln!(screen, "  {}. {:<18} {}", i + 1, rec.nickname, rec.score).unwrap();
+                    writeln!(screen, "  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap();
                 }
             });
 
