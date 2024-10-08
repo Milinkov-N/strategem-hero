@@ -93,17 +93,17 @@ impl Penalty {
 }
 
 pub enum Multiplier {
-    FirstTier,
-    SecondTier,
-    ThirdTier,
+    First,
+    Second,
+    Third,
 }
 
 impl Multiplier {
     pub fn get(streak: usize) -> Multiplier {
         match streak {
-            0..=5 => Multiplier::FirstTier,
-            6..=20 => Multiplier::SecondTier,
-            _ => Multiplier::ThirdTier,
+            0..=5 => Multiplier::First,
+            6..=20 => Multiplier::Second,
+            _ => Multiplier::Third,
         }
     }
 }
@@ -114,9 +114,9 @@ impl Display for Multiplier {
             f,
             "{}",
             match self {
-                Multiplier::FirstTier => "  ".black(),
-                Multiplier::SecondTier => "x2".green(),
-                Multiplier::ThirdTier => "x3".dark_magenta(),
+                Multiplier::First => "  ".black(),
+                Multiplier::Second => "x2".green(),
+                Multiplier::Third => "x3".dark_magenta(),
             }
         )
     }
@@ -127,15 +127,15 @@ pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier) -> us
     use StrategemDifficulty::*;
 
     match (difficulty, tier) {
-        (Easy, FirstTier) => 50,
-        (Medium, FirstTier) => 75,
-        (Hard, FirstTier) => 100,
-        (Easy, SecondTier) => 100,
-        (Medium, SecondTier) => 150,
-        (Hard, SecondTier) => 200,
-        (Easy, ThirdTier) => 125,
-        (Medium, ThirdTier) => 190,
-        (Hard, ThirdTier) => 250,
+        (Easy, First) => 50,
+        (Medium, First) => 75,
+        (Hard, First) => 100,
+        (Easy, Second) => 100,
+        (Medium, Second) => 150,
+        (Hard, Second) => 200,
+        (Easy, Third) => 125,
+        (Medium, Third) => 190,
+        (Hard, Third) => 250,
     }
 }
 

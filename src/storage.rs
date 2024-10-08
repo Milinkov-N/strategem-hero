@@ -61,7 +61,7 @@ impl Leaderboard {
 
     pub fn sorted_vec(&self) -> Vec<(&String, &usize)> {
         let mut v = Vec::from_iter(&self.0);
-        v.sort_by(|a, b| a.1.cmp(&b.1).reverse());
+        v.sort_by(|a, b| a.1.cmp(b.1).reverse());
         v
     }
 }

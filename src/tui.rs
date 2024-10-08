@@ -83,7 +83,7 @@ pub fn confirm_action() -> Result<bool> {
                 kind: KeyEventKind::Press,
                 ..
             } => return Ok(false),
-            _ => return Ok(false),
+            _ => (),
         }
     }
 
@@ -109,20 +109,17 @@ pub fn select_from_list(
         .for_each(|(i, (msg, _))| writeln!(screen, "{}. {msg}", i + 1).unwrap());
 
     while let Event::Key(ev) = crossterm::event::read()? {
-        match ev {
-            KeyEvent {
-                code,
-                kind: KeyEventKind::Press,
-                ..
-            } => {
-                if let Some(idx) = list.iter().position(|(_, ch)| code.eq(&KeyCode::Char(*ch))) {
-                    drop(screen);
-                    ScreenWriter::clear()?;
-                    return Ok(idx);
-                }
+        if let KeyEvent {
+            code,
+            kind: KeyEventKind::Press,
+            ..
+        } = ev
+        {
+            if let Some(idx) = list.iter().position(|(_, ch)| code.eq(&KeyCode::Char(*ch))) {
+                drop(screen);
+                ScreenWriter::clear()?;
+                return Ok(idx);
             }
-
-            _ => (),
         }
     }
 
