@@ -1,12 +1,11 @@
 use std::io::Write;
-
-use std::{path::PathBuf, time::Duration};
+use std::time::Duration;
 
 use crate::{
     error::Result,
     event::Controls,
     game::Game,
-    storage::LeaderboardStorage,
+    storage::Leaderboard,
     tui::ScreenWriter,
     utility::{GameTimer, Penalty},
 };
@@ -19,8 +18,6 @@ mod strategem;
 mod tui;
 mod utility;
 
-const VERSION: &str = "0.7";
-
 const LOGO: &str = r#"     _             _                                  _                    
     | |           | |                                | |                   
  ___| |_ _ __ __ _| |_ ___  __ _  ___ _ __ ___ ______| |__   ___ _ __ ___  
@@ -30,55 +27,30 @@ const LOGO: &str = r#"     _             _                                  _
                             __/ |                                          
                            |___/ "#;
 
-fn setup_data_dir() -> Result<PathBuf> {
-    let datadir = utility::get_app_data_dir()?;
+fn setup_data_dir() -> Result<()> {
+    let datadir = utility::data_dir()?;
     if !datadir.exists() {
         std::fs::create_dir(&datadir)?;
     }
-
-    let datadir = datadir.join(VERSION);
-    if !datadir.exists() {
-        std::fs::create_dir(&datadir)?;
-    }
-
-    Ok(datadir)
+    Ok(())
 }
 
 fn main() -> Result<()> {
-    let mut store = match setup_data_dir() {
-        Ok(dir) => LeaderboardStorage::open(dir.join("db.sqlite3")),
-        Err(_e) => {
-            println!("warning: unable to locate leaderboard data.");
-            println!("warning: all progress will be lost after this session.");
-
-            #[cfg(debug_assertions)]
-            {
-                eprintln!("{_e}");
-            }
-
-            LeaderboardStorage::open_in_memory()
-        }
-    };
-
-    #[cfg(debug_assertions)]
-    {
-        store.drop_schema()?;
-    }
-    store.init_schema()?;
-    store.seed_schema()?;
+    setup_data_dir()?;
+    let leaderboard = Leaderboard::open()?;
 
     if let Some(arg) = std::env::args().nth(1) {
         if arg.eq("leaderboard") {
-            store
-                .select_all()?
+            leaderboard
+                .sorted_vec()
                 .iter()
                 .enumerate()
-                .for_each(|(i, rec)| println!("  {}. {:<18} {}", i + 1, rec.nickname, rec.score));
+                .for_each(|(i, rec)| println!("  {}. {:<18} {}", i + 1, rec.0, rec.1));
             return Ok(());
         } else if arg.eq("delete-data") {
-            store.close()?;
-            let datadir = utility::get_app_data_dir()?;
-            std::fs::remove_dir_all(datadir)?;
+            if let Some(datadir) = utility::data_dir()?.parent() {
+                std::fs::remove_dir_all(datadir)?;
+            }
             println!("Deleted all game-related data successfully");
             return Ok(());
         }
@@ -100,29 +72,29 @@ fn main() -> Result<()> {
         ],
     )? {
         0 => {
-            let game_timer = GameTimer::start_from(Duration::from_secs(30));
+            let game_timer = GameTimer::start_from(Duration::from_secs(10));
             let penalty = Penalty::new(250, 10);
             let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
                 Controls::wasd()
             } else {
                 Controls::arrows()
             };
-            let mut game = Game::new(store, game_timer, controls, penalty);
+            let mut game = Game::new(leaderboard, game_timer, controls, penalty);
             game.run()?;
         }
 
         1 => {
-            store
-                .select_all()?
+            leaderboard
+                .sorted_vec()
                 .iter()
                 .enumerate()
-                .for_each(|(i, rec)| print!("  {}. {:<18} {}\r\n", i + 1, rec.nickname, rec.score));
+                .for_each(|(i, rec)| print!("  {}. {:<18} {}\r\n", i + 1, rec.0, rec.1));
         }
 
         2 => {
-            store.close()?;
-            let datadir = utility::get_app_data_dir()?;
-            std::fs::remove_dir_all(datadir)?;
+            if let Some(datadir) = utility::data_dir()?.parent() {
+                std::fs::remove_dir_all(datadir)?;
+            }
             println!("Deleted all game-related data successfully");
         }
 

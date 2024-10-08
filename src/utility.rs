@@ -13,6 +13,8 @@ use crate::{
     strategem::{Strategem, StrategemClass, StrategemDifficulty},
 };
 
+const VERSION: &str = "0.7";
+
 pub struct GameTimer {
     initial_duration: Duration,
     game_over_time: DateTime<Utc>,
@@ -174,7 +176,7 @@ pub fn format_strategem_name(strategem: &Strategem) -> String {
     }
 }
 
-pub fn get_app_data_dir() -> Result<PathBuf> {
+pub fn data_dir() -> Result<PathBuf> {
     const GAME_DIR: &str = "strategem-hero";
 
     #[cfg(target_os = "windows")]
@@ -182,7 +184,7 @@ pub fn get_app_data_dir() -> Result<PathBuf> {
         // C:\Users\<Account>\AppData\Roaming\<AppName>
         let appdata = std::env::var("APPDATA")?;
         let appdata_path = Path::new(&appdata);
-        Ok(appdata_path.join(GAME_DIR))
+        Ok(appdata_path.join(GAME_DIR).join(VERSION))
     }
 
     #[cfg(target_os = "linux")]
@@ -190,7 +192,11 @@ pub fn get_app_data_dir() -> Result<PathBuf> {
         // /home/<account>/.local/share/<AppName>
         let home = std::env::var("HOME")?;
         let homepath = Path::new(&home);
-        Ok(homepath.join(".local").join("share").join(GAME_DIR))
+        Ok(homepath
+            .join(".local")
+            .join("share")
+            .join(GAME_DIR)
+            .join(VERSION))
     }
 
     #[cfg(target_os = "macos")]
@@ -201,7 +207,8 @@ pub fn get_app_data_dir() -> Result<PathBuf> {
         Ok(homepath
             .join("Library")
             .join("Application Support")
-            .join(GAME_DIR))
+            .join(GAME_DIR)
+            .join(VERSION))
     }
 }
 
@@ -213,14 +220,15 @@ mod tests {
     #[cfg(target_os = "windows")]
     fn windows_app_data_dir() {
         let username = std::env::var("USERNAME").unwrap();
-        let path = get_app_data_dir();
+        let path = data_dir();
 
         assert_eq!(
             Path::new("C:\\Users")
                 .join(&username)
                 .join("AppData")
                 .join("Roaming")
-                .join("strategem-hero"),
+                .join("strategem-hero")
+                .join(VERSION),
             path.unwrap()
         );
     }
@@ -229,13 +237,14 @@ mod tests {
     #[cfg(target_os = "linux")]
     fn linux_app_data_dir() {
         let homepath = std::env::var("HOME").unwrap();
-        let path = get_app_data_dir();
+        let path = data_dir();
 
         assert_eq!(
             Path::new(&homepath)
                 .join(".local")
                 .join("share")
-                .join("strategem-hero"),
+                .join("strategem-hero")
+                .join(VERSION),
             path.unwrap()
         );
     }
@@ -244,13 +253,14 @@ mod tests {
     #[cfg(target_os = "macos")]
     fn macos_app_data_dir() {
         let homepath = std::env::var("HOME").unwrap();
-        let path = get_app_data_dir();
+        let path = data_dir();
 
         assert_eq!(
             Path::new(&homepath)
                 .join("Library")
                 .join("Application Support")
-                .join("strategem-hero"),
+                .join("strategem-hero")
+                .join(VERSION),
             path.unwrap()
         );
     }
