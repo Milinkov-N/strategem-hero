@@ -91,10 +91,10 @@ pub fn read(controls: &Controls) -> Result<Option<Key>> {
 fn format_key_code(code: &KeyCode) -> String {
     match code {
         KeyCode::Char(ch) => format!("'{ch}'"),
-        KeyCode::Up => format!("ArrowUp"),
-        KeyCode::Left => format!("ArrowLeft"),
-        KeyCode::Down => format!("ArrowDown"),
-        KeyCode::Right => format!("ArrowRight"),
+        KeyCode::Up => String::from("ArrowUp"),
+        KeyCode::Left => String::from("ArrowLeft"),
+        KeyCode::Down => String::from("ArrowDown"),
+        KeyCode::Right => String::from("ArrowRight"),
         other => format!("{other:?}"),
     }
 }
