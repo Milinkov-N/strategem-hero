@@ -33,6 +33,12 @@ impl Screen {
         Ok(())
     }
 
+    fn move_back_by(&mut self, value: u16) -> Result<()> {
+        std::io::stdout().execute(cursor::MoveUp(value))?;
+        self.lines_count -= value;
+        Ok(())
+    }
+
     fn full_clear(&mut self) -> Result<()> {
         std::io::stdout()
             .execute(cursor::MoveUp(self.lines_count))?
@@ -67,6 +73,16 @@ impl std::io::Write for Screen {
     }
 }
 
+pub struct ScreenScoped(u16);
+
+impl Drop for ScreenScoped {
+    fn drop(&mut self) {
+        let mut mtx = SCREEN.get().unwrap().lock().unwrap();
+        let val = mtx.get_mut().lines_count - self.0;
+        mtx.get_mut().move_back_by(val).unwrap();
+    }
+}
+
 pub struct ScreenCleaner;
 
 impl Drop for ScreenCleaner {
@@ -74,6 +90,11 @@ impl Drop for ScreenCleaner {
         let mut mtx = SCREEN.get().unwrap().lock().unwrap();
         mtx.get_mut().full_clear().unwrap();
     }
+}
+
+pub fn scope() -> ScreenScoped {
+    let mut mtx = SCREEN.get_or_init(Mutex::default).lock().unwrap();
+    ScreenScoped(mtx.get_mut().lines_count)
 }
 
 pub fn print(fmt: std::fmt::Arguments<'_>) -> Result<()> {
