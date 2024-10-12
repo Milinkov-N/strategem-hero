@@ -6,7 +6,7 @@ use crate::{
     event::Controls,
     game::Game,
     storage::Leaderboard,
-    tui::ScreenWriter,
+    tui::Screen,
     utility::{GameTimer, Penalty},
 };
 
@@ -58,7 +58,7 @@ fn main() -> Result<()> {
 
     crossterm::terminal::enable_raw_mode()?;
 
-    let mut screen = ScreenWriter::new();
+    let mut screen = Screen::new();
     writeln!(screen, "{LOGO}")?;
 
     match tui::select_from_list(
@@ -97,8 +97,6 @@ fn main() -> Result<()> {
             }
             println!("Deleted all game-related data successfully");
         }
-
-        3 => (),
 
         _ => (),
     }

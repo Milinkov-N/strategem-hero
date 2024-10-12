@@ -5,7 +5,7 @@ use crate::{
     event::{Controls, Key},
     storage::Leaderboard,
     strategem::Strategem,
-    tui::{self, HideCursor, ScreenWriter},
+    tui::{self, HideCursor, Screen},
     utility::{self, GameTimer, Multiplier, Penalty},
 };
 
@@ -80,7 +80,7 @@ impl Game {
     fn handle_input(&mut self) -> Result<()> {
         match crate::event::read(&self.controls)? {
             Some(Key::Escape) => {
-                ScreenWriter::clear()?;
+                Screen::clear()?;
                 self.is_running = false;
             }
             Some(key) => self.state.strategem.assert_key(key.into()),
@@ -92,7 +92,7 @@ impl Game {
     }
 
     fn print_frame(&mut self) -> Result<()> {
-        let mut screen = ScreenWriter::new();
+        let mut screen = Screen::new();
         writeln!(
             screen,
             "Score: {} {:>5}",
@@ -102,7 +102,7 @@ impl Game {
         writeln!(screen, "{}", self.state.game_timer)?;
         writeln!(screen, "{}", self.state.strategem)?;
         writeln!(screen, "Controls: {}", self.controls)?;
-        Ok(())
+        screen.move_back()
     }
 
     fn update_state(&mut self) {
@@ -126,7 +126,7 @@ impl Game {
     }
 
     fn handle_game_over(&mut self) -> Result<()> {
-        let mut screen = ScreenWriter::new();
+        let mut screen = Screen::cleaner();
         let (_, score) =
             self.store
                 .iter()
@@ -136,7 +136,7 @@ impl Game {
                     "Player not found in database",
                 ))?;
 
-        ScreenWriter::clear()?;
+        Screen::clear()?;
         writeln!(
             screen,
             "Game Over! You scored {} Democracy Points",
@@ -147,7 +147,7 @@ impl Game {
             self.store.insert("You", self.state.score);
         }
 
-        self.print_leaderboard(&mut screen, self.state.score)?;
+        self.print_leaderboard(screen.inner_mut(), self.state.score)?;
 
         writeln!(screen, "Restart the game [y/n]?")?;
 
@@ -157,12 +157,10 @@ impl Game {
             self.is_running = false;
         }
 
-        self.store.save()?;
-        drop(screen);
-        ScreenWriter::clear()
+        self.store.save()
     }
 
-    fn print_leaderboard(&mut self, screen: &mut ScreenWriter, curr_score: usize) -> Result<()> {
+    fn print_leaderboard(&mut self, screen: &mut Screen, curr_score: usize) -> Result<()> {
         writeln!(screen, "Leaderboard:")?;
         self.store
             .sorted_vec()

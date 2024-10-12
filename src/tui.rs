@@ -9,13 +9,29 @@ use crossterm::{
 
 use crate::error::Result;
 
-pub struct ScreenWriter {
+pub struct Screen {
     lines_count: u16,
 }
 
-impl ScreenWriter {
+impl Screen {
     pub fn new() -> Self {
         Self { lines_count: 0 }
+    }
+
+    pub fn cleaner() -> ScreenCleaner {
+        ScreenCleaner(Self::new())
+    }
+
+    pub fn move_back(&mut self) -> Result<()> {
+        std::io::stdout().execute(cursor::MoveUp(self.lines_count))?;
+        Ok(())
+    }
+
+    pub fn full_clear(&mut self) -> Result<()> {
+        std::io::stdout()
+            .execute(cursor::MoveUp(self.lines_count))?
+            .execute(terminal::Clear(ClearType::FromCursorDown))?;
+        Ok(())
     }
 
     pub fn clear() -> Result<()> {
@@ -24,7 +40,7 @@ impl ScreenWriter {
     }
 }
 
-impl std::io::Write for ScreenWriter {
+impl std::io::Write for Screen {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.lines_count += 1;
         std::io::stdout().write(buf)
@@ -45,11 +61,37 @@ impl std::io::Write for ScreenWriter {
     }
 }
 
-impl Drop for ScreenWriter {
+pub struct ScreenCleaner(Screen);
+
+impl ScreenCleaner {
+    pub fn inner_mut(&mut self) -> &mut Screen {
+        &mut self.0
+    }
+}
+
+impl From<Screen> for ScreenCleaner {
+    fn from(value: Screen) -> Self {
+        Self(value)
+    }
+}
+
+impl std::io::Write for ScreenCleaner {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.0.write(buf)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.0.flush()
+    }
+
+    fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> std::io::Result<()> {
+        self.0.write_fmt(fmt)
+    }
+}
+
+impl Drop for ScreenCleaner {
     fn drop(&mut self) {
-        std::io::stdout()
-            .execute(cursor::MoveUp(self.lines_count))
-            .unwrap();
+        self.0.full_clear().unwrap();
     }
 }
 
@@ -91,13 +133,13 @@ pub fn confirm_action() -> Result<bool> {
 }
 
 pub fn select_from_list(
-    screen: Option<ScreenWriter>,
+    screen: Option<Screen>,
     prompt: Option<&str>,
     list: Vec<(&str, char)>,
 ) -> Result<usize> {
     let mut screen = match screen {
-        Some(screen) => screen,
-        None => ScreenWriter::new(),
+        Some(screen) => screen.into(),
+        None => Screen::cleaner(),
     };
 
     if let Some(msg) = prompt {
@@ -116,15 +158,10 @@ pub fn select_from_list(
         } = ev
         {
             if let Some(idx) = list.iter().position(|(_, ch)| code.eq(&KeyCode::Char(*ch))) {
-                drop(screen);
-                ScreenWriter::clear()?;
                 return Ok(idx);
             }
         }
     }
-
-    drop(screen);
-    ScreenWriter::clear()?;
 
     Ok(0)
 }
