@@ -58,17 +58,21 @@ fn main() -> Result<()> {
 
     screenln!("{LOGO}")?;
 
-    match tui::select_from_list(
-        Some("Press key in [] brackets to choose an action."),
-        vec![
-            ("[S]tart Game", 's'),
-            ("[L]eaderboard", 'l'),
-            ("[D]elete Data", 'd'),
-            ("[Q]uit", 'q'),
-        ],
-    )? {
-        0 => {
-            let game_timer = GameTimer::start_from(Duration::from_secs(10));
+    match tui::menu::Menu::builder()
+        .add_item("Start Game")
+        .add_item("Leaderboard")
+        .add_item("Delete Data")
+        .add_item("Quit")
+        .build()
+        .exec()?
+    {
+        Some(0) => {
+            let secs = if cfg!(debug_assertions) {
+                Duration::from_secs(10)
+            } else {
+                Duration::from_secs(30)
+            };
+            let game_timer = GameTimer::start_from(secs);
             let penalty = Penalty::new(250, 10);
             let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
                 Controls::wasd()
@@ -79,7 +83,7 @@ fn main() -> Result<()> {
             game.run()?;
         }
 
-        1 => {
+        Some(1) => {
             leaderboard
                 .sorted_vec()
                 .iter()
@@ -87,7 +91,7 @@ fn main() -> Result<()> {
                 .for_each(|(i, rec)| print!("  {}. {:<18} {}\r\n", i + 1, rec.0, rec.1));
         }
 
-        2 => {
+        Some(2) => {
             if let Some(datadir) = utility::data_dir()?.parent() {
                 std::fs::remove_dir_all(datadir)?;
             }

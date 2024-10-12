@@ -3,8 +3,9 @@ use crossterm::{
     ExecutableCommand,
 };
 
-use crate::{error::Result, screenln};
+use crate::error::Result;
 
+pub mod menu;
 pub mod screen;
 
 pub struct HideCursor;
@@ -42,30 +43,4 @@ pub fn confirm_action() -> Result<bool> {
     }
 
     Ok(false)
-}
-
-pub fn select_from_list(prompt: Option<&str>, list: Vec<(&str, char)>) -> Result<usize> {
-    let _sc = screen::cleaner();
-    if let Some(msg) = prompt {
-        screenln!("{msg}")?;
-    }
-
-    list.iter()
-        .enumerate()
-        .for_each(|(i, (msg, _))| screenln!("{}. {msg}", i + 1).unwrap());
-
-    while let Event::Key(ev) = crossterm::event::read()? {
-        if let KeyEvent {
-            code,
-            kind: KeyEventKind::Press,
-            ..
-        } = ev
-        {
-            if let Some(idx) = list.iter().position(|(_, ch)| code.eq(&KeyCode::Char(*ch))) {
-                return Ok(idx);
-            }
-        }
-    }
-
-    Ok(0)
 }
