@@ -1,4 +1,3 @@
-use std::io::Write;
 use std::time::Duration;
 
 use crate::{
@@ -6,7 +5,6 @@ use crate::{
     event::Controls,
     game::Game,
     storage::Leaderboard,
-    tui::Screen,
     utility::{GameTimer, Penalty},
 };
 
@@ -58,11 +56,9 @@ fn main() -> Result<()> {
 
     crossterm::terminal::enable_raw_mode()?;
 
-    let mut screen = Screen::new();
-    writeln!(screen, "{LOGO}")?;
+    screenln!("{LOGO}")?;
 
     match tui::select_from_list(
-        Some(screen),
         Some("Press key in [] brackets to choose an action."),
         vec![
             ("[S]tart Game", 's'),

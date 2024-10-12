@@ -1,11 +1,12 @@
-use std::{io::Write, time::Duration};
+use std::time::Duration;
 
 use crate::{
     error::Result,
     event::{Controls, Key},
+    screenln,
     storage::Leaderboard,
     strategem::Strategem,
-    tui::{self, HideCursor, Screen},
+    tui::{self, HideCursor},
     utility::{self, GameTimer, Multiplier, Penalty},
 };
 
@@ -80,7 +81,7 @@ impl Game {
     fn handle_input(&mut self) -> Result<()> {
         match crate::event::read(&self.controls)? {
             Some(Key::Escape) => {
-                Screen::clear()?;
+                tui::screen::clear()?;
                 self.is_running = false;
             }
             Some(key) => self.state.strategem.assert_key(key.into()),
@@ -92,17 +93,15 @@ impl Game {
     }
 
     fn print_frame(&mut self) -> Result<()> {
-        let mut screen = Screen::new();
-        writeln!(
-            screen,
+        screenln!(
             "Score: {} {:>5}",
             self.state.score,
             Multiplier::get(self.state.streak)
         )?;
-        writeln!(screen, "{}", self.state.game_timer)?;
-        writeln!(screen, "{}", self.state.strategem)?;
-        writeln!(screen, "Controls: {}", self.controls)?;
-        screen.move_back()
+        screenln!("{}", self.state.game_timer)?;
+        screenln!("{}", self.state.strategem)?;
+        screenln!("Controls: {}", self.controls)?;
+        tui::screen::move_back()
     }
 
     fn update_state(&mut self) {
@@ -126,7 +125,7 @@ impl Game {
     }
 
     fn handle_game_over(&mut self) -> Result<()> {
-        let mut screen = Screen::cleaner();
+        let mut _sc = tui::screen::cleaner();
         let (_, score) =
             self.store
                 .iter()
@@ -136,9 +135,8 @@ impl Game {
                     "Player not found in database",
                 ))?;
 
-        Screen::clear()?;
-        writeln!(
-            screen,
+        tui::screen::clear()?;
+        screenln!(
             "Game Over! You scored {} Democracy Points",
             self.state.score
         )?;
@@ -147,9 +145,9 @@ impl Game {
             self.store.insert("You", self.state.score);
         }
 
-        self.print_leaderboard(screen.inner_mut(), self.state.score)?;
+        self.print_leaderboard(self.state.score)?;
 
-        writeln!(screen, "Restart the game [y/n]?")?;
+        screenln!("Restart the game [y/n]?")?;
 
         if tui::confirm_action()? {
             self.state.reset();
@@ -160,17 +158,17 @@ impl Game {
         self.store.save()
     }
 
-    fn print_leaderboard(&mut self, screen: &mut Screen, curr_score: usize) -> Result<()> {
-        writeln!(screen, "Leaderboard:")?;
+    fn print_leaderboard(&mut self, curr_score: usize) -> Result<()> {
+        screenln!("Leaderboard:")?;
         self.store
             .sorted_vec()
             .iter()
             .enumerate()
             .for_each(|(i, rec)| {
                 if rec.0.eq("You") && rec.1 > &curr_score {
-                    writeln!(screen, "  {}. {:<18} {} New record!", i + 1, rec.0, rec.1).unwrap();
+                    screenln!("  {}. {:<18} {} New record!", i + 1, rec.0, rec.1).unwrap();
                 } else {
-                    writeln!(screen, "  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap();
+                    screenln!("  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap();
                 }
             });
 
