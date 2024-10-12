@@ -58,47 +58,111 @@ fn main() -> Result<()> {
 
     screenln!("{LOGO}")?;
 
-    match tui::menu::Menu::builder()
-        .add_item("Start Game")
-        .add_item("Leaderboard")
-        .add_item("Delete Data")
-        .add_item("Quit")
-        .build()
-        .exec()?
-    {
-        Some(0) => {
-            let secs = if cfg!(debug_assertions) {
-                Duration::from_secs(10)
-            } else {
-                Duration::from_secs(30)
-            };
-            let game_timer = GameTimer::start_from(secs);
-            let penalty = Penalty::new(250, 10);
-            let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
-                Controls::wasd()
-            } else {
-                Controls::arrows()
-            };
-            let mut game = Game::new(leaderboard, game_timer, controls, penalty);
-            game.run()?;
-        }
-
-        Some(1) => {
-            leaderboard
-                .sorted_vec()
-                .iter()
-                .enumerate()
-                .for_each(|(i, rec)| print!("  {}. {:<18} {}\r\n", i + 1, rec.0, rec.1));
-        }
-
-        Some(2) => {
-            if let Some(datadir) = utility::data_dir()?.parent() {
-                std::fs::remove_dir_all(datadir)?;
+    'game_loop: loop {
+        match tui::menu::Menu::builder()
+            .add_item("Start Game")
+            .add_item("Leaderboard")
+            .add_item("Upgrades")
+            .add_item("Delete Data")
+            .add_item("Quit")
+            .build()
+            .exec()?
+        {
+            Some(0) => {
+                let secs = if cfg!(debug_assertions) {
+                    Duration::from_secs(10)
+                } else {
+                    Duration::from_secs(30)
+                };
+                let game_timer = GameTimer::start_from(secs);
+                let penalty = Penalty::new(250, 10);
+                let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
+                    Controls::wasd()
+                } else {
+                    Controls::arrows()
+                };
+                let mut game = Game::new(leaderboard, game_timer, controls, penalty);
+                game.run()?;
+                break 'game_loop;
             }
-            println!("Deleted all game-related data successfully");
-        }
 
-        _ => (),
+            Some(1) => {
+                leaderboard
+                    .sorted_vec()
+                    .iter()
+                    .enumerate()
+                    .for_each(|(i, rec)| print!("  {}. {:<18} {}\r\n", i + 1, rec.0, rec.1));
+            }
+
+            Some(2) => {
+                struct UpgradeItem<'a> {
+                    name: &'a str,
+                    desc: &'a str,
+                    price: u32,
+                    purchased: bool,
+                }
+
+                impl<'a> UpgradeItem<'a> {
+                    pub fn new(name: &'a str, desc: &'a str, price: u32) -> Self {
+                        Self {
+                            name,
+                            desc,
+                            price,
+                            purchased: false,
+                        }
+                    }
+                }
+
+                impl<'a> std::fmt::Display for UpgradeItem<'a> {
+                    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(
+                            f,
+                            "{:<32}[{}]\n\t{}",
+                            self.name,
+                            if self.purchased {
+                                "Purchased".to_string()
+                            } else {
+                                format!("{} DP", self.price)
+                            },
+                            self.desc
+                        )
+                    }
+                }
+
+                let shrapnel = UpgradeItem::new(
+                    "Exploding Shrapnel",
+                    "increases all strategem rewards by +100 Democracy Points",
+                    2500,
+                );
+                let lvc = UpgradeItem::new(
+                    "Liquid-Ventilated Cockpit",
+                    "reduces time penalty after failed strategem",
+                    3000,
+                );
+                let tsu = UpgradeItem::new(
+                    "Targeting Software Upgrade",
+                    "increases time reward after successfully completing strategem by +0.5s",
+                    5000,
+                );
+
+                screenln!("Upgrades:")?;
+                let _ = tui::menu::Menu::builder()
+                    .add_item(shrapnel)
+                    .add_item(lvc)
+                    .add_item(tsu)
+                    .build()
+                    .exec()?;
+            }
+
+            Some(3) => {
+                if let Some(datadir) = utility::data_dir()?.parent() {
+                    std::fs::remove_dir_all(datadir)?;
+                }
+                println!("Deleted all game-related data successfully");
+            }
+
+            _ => break 'game_loop,
+        }
     }
 
     crossterm::terminal::disable_raw_mode()?;
