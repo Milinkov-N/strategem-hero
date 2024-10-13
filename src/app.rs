@@ -170,7 +170,7 @@ impl App {
             .enumerate()
             .for_each(|(i, rec)| screenln!("  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap());
 
-        crate::tui::confirm_action()?;
+        crate::tui::confirm_quit(Some("return to main menu"))?;
         self.screen.set_main();
 
         Ok(())
@@ -216,7 +216,7 @@ impl App {
         }
 
         screenln!("Deleted all game-related data successfully")?;
-        crate::tui::confirm_action()?;
+        crate::tui::confirm_quit(Some("return to main menu"))?;
 
         Ok(())
     }
