@@ -51,12 +51,14 @@ impl Screen {
     }
 }
 
-pub struct App {
+pub struct App<'a> {
     screen: Screen,
     leaderboard: Leaderboard,
+    is_running: bool,
+    upgrades: Vec<UpgradeItem<'a>>,
 }
 
-impl App {
+impl<'a> App<'a> {
     pub fn init() -> Result<Self> {
         crate::utility::setup_data_dir()?;
         let leaderboard = Leaderboard::open()?;
@@ -64,6 +66,24 @@ impl App {
         Ok(Self {
             screen: Default::default(),
             leaderboard,
+            is_running: true,
+            upgrades: vec![
+                UpgradeItem::new(
+                    "Exploding Shrapnel",
+                    "increases all strategem rewards by +100 Democracy Points",
+                    2500,
+                ),
+                UpgradeItem::new(
+                    "Liquid-Ventilated Cockpit",
+                    "reduces time penalty after failed strategem",
+                    3000,
+                ),
+                UpgradeItem::new(
+                    "Targeting Software Upgrade",
+                    "increases time reward after successfully completing strategem by +0.5s",
+                    5000,
+                ),
+            ],
         })
     }
 
@@ -90,104 +110,105 @@ impl App {
 
     pub fn run(mut self) -> Result<()> {
         crossterm::terminal::enable_raw_mode()?;
-        let mut shrapnel = UpgradeItem::new(
-            "Exploding Shrapnel",
-            "increases all strategem rewards by +100 Democracy Points",
-            2500,
-        );
-        let mut lvc = UpgradeItem::new(
-            "Liquid-Ventilated Cockpit",
-            "reduces time penalty after failed strategem",
-            3000,
-        );
-        let mut tsu = UpgradeItem::new(
-            "Targeting Software Upgrade",
-            "increases time reward after successfully completing strategem by +0.5s",
-            5000,
-        );
 
         'main_loop: loop {
             let _sc = crate::tui::screen::cleaner();
 
+            if !self.is_running {
+                break 'main_loop;
+            }
+
             match self.screen {
-                Screen::Main => {
-                    screenln!("{LOGO}")?;
-                    match crate::tui::menu::Menu::builder()
-                        .add_item("Start Game")
-                        .add_item("Leaderboard")
-                        .add_item("Upgrades")
-                        .add_item("Delete Data")
-                        .add_item("Quit")
-                        .build()
-                        .exec("Main Menu:")?
-                    {
-                        Some(0) => self.screen.set_game(),
-                        Some(1) => self.screen.set_leaderboard(),
-                        Some(2) => self.screen.set_upgrades(),
-                        Some(3) => self.screen.set_delete_data(),
-                        _ => break 'main_loop,
-                    }
-                }
-
-                Screen::Game => {
-                    let secs = if cfg!(debug_assertions) {
-                        Duration::from_secs(10)
-                    } else {
-                        Duration::from_secs(30)
-                    };
-                    let game_timer = GameTimer::start_from(secs);
-                    let penalty = Penalty::new(250, 10);
-                    let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
-                        Controls::wasd()
-                    } else {
-                        Controls::arrows()
-                    };
-                    let mut game = Game::new(self.leaderboard, game_timer, controls, penalty);
-                    game.run()?;
-                    break 'main_loop;
-                }
-
-                Screen::Leaderboard => {
-                    self.leaderboard
-                        .sorted_vec()
-                        .iter()
-                        .enumerate()
-                        .for_each(|(i, rec)| {
-                            screenln!("  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap()
-                        });
-
-                    crate::tui::confirm_action()?;
-                    self.screen.set_main();
-                }
-
-                Screen::Upgrades => {
-                    screenln!("{LOGO}")?;
-                    match crate::tui::menu::Menu::builder()
-                        .add_item(&shrapnel)
-                        .add_item(&lvc)
-                        .add_item(&tsu)
-                        .build()
-                        .exec("Upgrades:")?
-                    {
-                        Some(0) => shrapnel.set_purchased(),
-                        Some(1) => lvc.set_purchased(),
-                        Some(2) => tsu.set_purchased(),
-
-                        None => self.screen.set_main(),
-                        _ => todo!(),
-                    }
-                }
-
-                Screen::DeleteData => {
-                    if let Some(datadir) = crate::utility::data_dir()?.parent() {
-                        std::fs::remove_dir_all(datadir)?;
-                    }
-                    screenln!("Deleted all game-related data successfully")?;
-                    crate::tui::confirm_action()?;
-                }
+                Screen::Main => self.render_main()?,
+                Screen::Game => return self.render_game(),
+                Screen::Leaderboard => self.render_leaderboard()?,
+                Screen::Upgrades => self.render_upgrades()?,
+                Screen::DeleteData => return self.render_delete_data(),
             }
         }
         crossterm::terminal::disable_raw_mode()?;
+
+        Ok(())
+    }
+
+    fn render_main(&mut self) -> Result<()> {
+        screenln!("{LOGO}")?;
+        match crate::tui::menu::Menu::builder()
+            .add_item("Start Game")
+            .add_item("Leaderboard")
+            .add_item("Upgrades")
+            .add_item("Delete Data")
+            .add_item("Quit")
+            .build()
+            .exec("Main Menu:")?
+        {
+            Some(0) => self.screen.set_game(),
+            Some(1) => self.screen.set_leaderboard(),
+            Some(2) => self.screen.set_upgrades(),
+            Some(3) => self.screen.set_delete_data(),
+            _ => self.is_running = false,
+        }
+
+        Ok(())
+    }
+
+    fn render_game(self) -> Result<()> {
+        let secs = if cfg!(debug_assertions) {
+            Duration::from_secs(10)
+        } else {
+            Duration::from_secs(30)
+        };
+        let game_timer = GameTimer::start_from(secs);
+        let penalty = Penalty::new(250, 10);
+        let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
+            Controls::wasd()
+        } else {
+            Controls::arrows()
+        };
+        let mut game = Game::new(self.leaderboard, game_timer, controls, penalty);
+        game.run()
+    }
+
+    fn render_leaderboard(&mut self) -> Result<()> {
+        self.leaderboard
+            .sorted_vec()
+            .iter()
+            .enumerate()
+            .for_each(|(i, rec)| screenln!("  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap());
+
+        crate::tui::confirm_action()?;
+        self.screen.set_main();
+
+        Ok(())
+    }
+
+    fn render_upgrades(&mut self) -> Result<()> {
+        screenln!("{LOGO}")?;
+        match crate::tui::menu::Menu::builder()
+            .add_item(&self.upgrades[0])
+            .add_item(&self.upgrades[1])
+            .add_item(&self.upgrades[2])
+            .build()
+            .exec("Upgrades:")?
+        {
+            Some(0) => self.upgrades[0].set_purchased(),
+            Some(1) => self.upgrades[1].set_purchased(),
+            Some(2) => self.upgrades[2].set_purchased(),
+
+            None => self.screen.set_main(),
+            _ => todo!(),
+        }
+
+        Ok(())
+    }
+
+    fn render_delete_data(self) -> Result<()> {
+        if let Some(datadir) = crate::utility::data_dir()?.parent() {
+            std::fs::remove_dir_all(datadir)?;
+        }
+
+        screenln!("Deleted all game-related data successfully")?;
+        crate::tui::confirm_action()?;
 
         Ok(())
     }
