@@ -6,7 +6,7 @@ use crate::{
     screenln,
     storage::{Leaderboard, PlayerData, Storage},
     strategem::Strategem,
-    tui::{self, HideCursor},
+    tui,
     utility::{self, GameTimer, Multiplier, Penalty},
 };
 
@@ -63,8 +63,6 @@ impl Game {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        let _guard = HideCursor::hide()?;
-
         tui::screen::full_clear()?;
 
         while self.is_running {

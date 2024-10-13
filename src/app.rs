@@ -99,6 +99,8 @@ impl App {
     }
 
     pub fn run(mut self) -> Result<()> {
+        let _guard = crate::tui::HideCursor::hide()?;
+
         crossterm::terminal::enable_raw_mode()?;
 
         'main_loop: loop {
