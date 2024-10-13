@@ -212,6 +212,14 @@ pub fn data_dir() -> Result<PathBuf> {
     }
 }
 
+pub fn setup_data_dir() -> Result<()> {
+    let datadir = data_dir()?;
+    if !datadir.exists() {
+        std::fs::create_dir_all(&datadir)?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
