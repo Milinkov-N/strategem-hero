@@ -66,6 +66,44 @@ impl Leaderboard {
     }
 }
 
+pub struct UpgradeItem<'a> {
+    name: &'a str,
+    desc: &'a str,
+    price: u32,
+    purchased: bool,
+}
+
+impl<'a> UpgradeItem<'a> {
+    pub fn new(name: &'a str, desc: &'a str, price: u32) -> Self {
+        Self {
+            name,
+            desc,
+            price,
+            purchased: false,
+        }
+    }
+
+    pub fn set_purchased(&mut self) {
+        self.purchased = true;
+    }
+}
+
+impl<'a> std::fmt::Display for UpgradeItem<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{:<32}[{}]\n\t{}",
+            self.name,
+            if self.purchased {
+                "Purchased".to_string()
+            } else {
+                format!("{} DP", self.price)
+            },
+            self.desc
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Leaderboard;
