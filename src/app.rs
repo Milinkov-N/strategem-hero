@@ -160,6 +160,8 @@ impl App {
     }
 
     fn render_leaderboard(&mut self) -> Result<()> {
+        screenln!("{LOGO}")?;
+        screenln!("----[ Leaderboard ]----------")?;
         self.leaderboard
             .sorted_vec()
             .iter()
