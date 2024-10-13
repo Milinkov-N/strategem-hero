@@ -4,7 +4,7 @@ use std::{
     io::Write,
 };
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{error::Result, utility};
 
@@ -37,6 +37,29 @@ where
         file.write_all(&bytes)?;
 
         Ok(())
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct PlayerData {
+    wallet: usize,
+}
+
+impl Storage for PlayerData {
+    const FILENAME: &'static str = "player_data";
+}
+
+impl PlayerData {
+    pub fn wallet(&self) -> usize {
+        self.wallet
+    }
+
+    pub fn add_to_wallet(&mut self, value: usize) {
+        self.wallet += value;
+    }
+
+    pub fn write_off_from_wallet(&mut self, value: usize) {
+        self.wallet = self.wallet.saturating_sub(value);
     }
 }
 
@@ -124,18 +147,34 @@ impl Default for Upgrades {
 pub struct UpgradeItem {
     name: String,
     desc: String,
-    price: u32,
+    price: usize,
     purchased: bool,
 }
 
 impl UpgradeItem {
-    pub fn new(name: impl Into<String>, desc: impl Into<String>, price: u32) -> Self {
+    pub fn new(name: impl Into<String>, desc: impl Into<String>, price: usize) -> Self {
         Self {
             name: name.into(),
             desc: desc.into(),
             price,
             purchased: false,
         }
+    }
+
+    // pub fn name(&self) -> &str {
+    //     &self.name
+    // }
+    //
+    // pub fn desc(&self) -> &str {
+    //     &self.desc
+    // }
+
+    pub fn price(&self) -> usize {
+        self.price
+    }
+
+    pub fn is_purchased(&self) -> bool {
+        self.purchased
     }
 
     pub fn set_purchased(&mut self) {

@@ -4,7 +4,7 @@ use crate::{
     error::Result,
     event::{Controls, Key},
     screenln,
-    storage::{Leaderboard, Storage},
+    storage::{Leaderboard, PlayerData, Storage},
     strategem::Strategem,
     tui::{self, HideCursor},
     utility::{self, GameTimer, Multiplier, Penalty},
@@ -37,7 +37,8 @@ impl GameState {
 
 pub struct Game {
     state: GameState,
-    store: Leaderboard,
+    player: PlayerData,
+    leaderboard: Leaderboard,
     penalty: Penalty,
     controls: Controls,
     is_running: bool,
@@ -45,14 +46,16 @@ pub struct Game {
 
 impl Game {
     pub fn new(
-        store: Leaderboard,
+        player: PlayerData,
+        leaderboard: Leaderboard,
         game_timer: GameTimer,
         controls: Controls,
         penalty: Penalty,
     ) -> Self {
         Self {
             state: GameState::new(game_timer),
-            store,
+            player,
+            leaderboard,
             penalty,
             controls,
             is_running: true,
@@ -130,7 +133,7 @@ impl Game {
     fn handle_game_over(&mut self) -> Result<()> {
         let mut _sc = tui::screen::cleaner();
         let (_, score) =
-            self.store
+            self.leaderboard
                 .iter()
                 .find(|rec| rec.0.eq("You"))
                 .ok_or(std::io::Error::new(
@@ -145,25 +148,26 @@ impl Game {
         )?;
 
         if &self.state.score > score {
-            self.store.insert("You", self.state.score);
+            self.leaderboard.insert("You", self.state.score);
         }
 
         self.print_leaderboard(self.state.score)?;
 
         screenln!("Restart the game [y/n]?")?;
-
         if tui::confirm_action()? {
             self.state.reset();
         } else {
             self.is_running = false;
         }
 
-        self.store.save()
+        self.player.add_to_wallet(self.state.score);
+        self.player.save()?;
+        self.leaderboard.save()
     }
 
     fn print_leaderboard(&mut self, curr_score: usize) -> Result<()> {
         screenln!("Leaderboard:")?;
-        self.store
+        self.leaderboard
             .sorted_vec()
             .iter()
             .enumerate()

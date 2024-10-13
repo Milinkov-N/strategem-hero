@@ -5,7 +5,7 @@ use crate::{
     event::Controls,
     game::Game,
     screenln,
-    storage::{Leaderboard, Storage, Upgrades},
+    storage::{Leaderboard, PlayerData, Storage, UpgradeItem, Upgrades},
     utility::{GameTimer, Penalty},
 };
 
@@ -52,6 +52,7 @@ impl Screen {
 
 pub struct App {
     screen: Screen,
+    player: PlayerData,
     leaderboard: Leaderboard,
     is_running: bool,
     upgrades: Upgrades,
@@ -60,11 +61,14 @@ pub struct App {
 impl App {
     pub fn init() -> Result<Self> {
         crate::utility::setup_data_dir()?;
+
+        let player = PlayerData::open()?;
         let leaderboard = Leaderboard::open()?;
         let upgrades = Upgrades::open()?;
 
         Ok(Self {
             screen: Default::default(),
+            player,
             leaderboard,
             is_running: true,
             upgrades,
@@ -87,6 +91,8 @@ impl App {
                 println!("Deleted all game-related data successfully");
                 return Ok(());
             }
+
+            self.is_running = false;
         }
 
         Ok(())
@@ -149,7 +155,7 @@ impl App {
         } else {
             Controls::arrows()
         };
-        let mut game = Game::new(self.leaderboard, game_timer, controls, penalty);
+        let mut game = Game::new(self.player, self.leaderboard, game_timer, controls, penalty);
         game.run()
     }
 
@@ -168,16 +174,30 @@ impl App {
 
     fn render_upgrades(&mut self) -> Result<()> {
         screenln!("{LOGO}")?;
+        let handle_purchase = |player: &mut PlayerData, upgrade: &mut UpgradeItem| -> Result<()> {
+            if upgrade.is_purchased() {
+                return Ok(());
+            }
+
+            if player.wallet() >= upgrade.price() {
+                player.write_off_from_wallet(upgrade.price());
+                upgrade.set_purchased();
+                player.save()?;
+            }
+
+            Ok(())
+        };
+
         match crate::tui::menu::Menu::builder()
             .add_item(&self.upgrades[0])
             .add_item(&self.upgrades[1])
             .add_item(&self.upgrades[2])
             .build()
-            .exec("Upgrades:")?
+            .exec(&format!("Upgrades (You have {} DP):", self.player.wallet()))?
         {
-            Some(0) => self.upgrades[0].set_purchased(),
-            Some(1) => self.upgrades[1].set_purchased(),
-            Some(2) => self.upgrades[2].set_purchased(),
+            Some(0) => handle_purchase(&mut self.player, &mut self.upgrades[0])?,
+            Some(1) => handle_purchase(&mut self.player, &mut self.upgrades[1])?,
+            Some(2) => handle_purchase(&mut self.player, &mut self.upgrades[2])?,
 
             None => self.screen.set_main(),
             _ => todo!(),
