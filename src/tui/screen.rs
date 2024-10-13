@@ -40,10 +40,12 @@ impl Screen {
     }
 
     fn full_clear(&mut self) -> Result<()> {
-        std::io::stdout()
-            .execute(cursor::MoveUp(self.lines_count))?
-            .execute(terminal::Clear(ClearType::FromCursorDown))?;
-        self.lines_count = 0;
+        if self.lines_count != 0 {
+            std::io::stdout().execute(cursor::MoveUp(self.lines_count))?;
+            std::io::stdout().execute(terminal::Clear(ClearType::FromCursorDown))?;
+            self.lines_count = 0;
+        }
+
         Ok(())
     }
 }
@@ -78,7 +80,7 @@ pub struct ScreenScoped(u16);
 impl Drop for ScreenScoped {
     fn drop(&mut self) {
         let mut mtx = SCREEN.get().unwrap().lock().unwrap();
-        let val = mtx.get_mut().lines_count - self.0;
+        let val = mtx.get_mut().lines_count.saturating_sub(self.0);
         mtx.get_mut().move_back_by(val).unwrap();
     }
 }
@@ -101,6 +103,11 @@ pub fn print(fmt: std::fmt::Arguments<'_>) -> Result<()> {
     let mut mtx = SCREEN.get_or_init(Mutex::default).lock().unwrap();
     mtx.get_mut().write_fmt(fmt)?;
     Ok(())
+}
+
+pub fn full_clear() -> Result<()> {
+    let mut mtx = SCREEN.get_or_init(Mutex::default).lock().unwrap();
+    mtx.get_mut().full_clear()
 }
 
 pub fn move_back() -> Result<()> {

@@ -62,6 +62,8 @@ impl Game {
     pub fn run(&mut self) -> Result<()> {
         let _guard = HideCursor::hide()?;
 
+        tui::screen::full_clear()?;
+
         while self.is_running {
             if crossterm::event::poll(Duration::from_millis(17))? {
                 self.handle_input()?;
@@ -101,6 +103,7 @@ impl Game {
         screenln!("{}", self.state.game_timer)?;
         screenln!("{}", self.state.strategem)?;
         screenln!("Controls: {}", self.controls)?;
+
         tui::screen::move_back()
     }
 

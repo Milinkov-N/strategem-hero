@@ -13,12 +13,13 @@ impl<T: Display> Menu<T> {
         MenuBuilder::new()
     }
 
-    pub fn exec(&self) -> Result<Option<usize>> {
-        let _sc = crate::tui::screen::cleaner();
-        let mut idx = 0;
+    pub fn exec(&self, prompt: &str) -> Result<Option<usize>> {
+        let mut idx: usize = 0;
 
+        screenln!("{prompt}")?;
         loop {
             let _screen_scope = crate::tui::screen::scope();
+
             self.items.iter().enumerate().for_each(|(i, item)| {
                 screenln!("  [{}] {}", if i == idx { '*' } else { ' ' }, item).unwrap();
             });

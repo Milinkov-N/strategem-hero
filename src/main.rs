@@ -28,7 +28,7 @@ const LOGO: &str = r#"     _             _                                  _
 fn setup_data_dir() -> Result<()> {
     let datadir = utility::data_dir()?;
     if !datadir.exists() {
-        std::fs::create_dir(&datadir)?;
+        std::fs::create_dir_all(&datadir)?;
     }
     Ok(())
 }
@@ -56,9 +56,9 @@ fn main() -> Result<()> {
 
     crossterm::terminal::enable_raw_mode()?;
 
-    screenln!("{LOGO}")?;
-
     'game_loop: loop {
+        let _sc = crate::tui::screen::cleaner();
+        screenln!("{LOGO}")?;
         match tui::menu::Menu::builder()
             .add_item("Start Game")
             .add_item("Leaderboard")
@@ -66,7 +66,7 @@ fn main() -> Result<()> {
             .add_item("Delete Data")
             .add_item("Quit")
             .build()
-            .exec()?
+            .exec("Main Menu:")?
         {
             Some(0) => {
                 let secs = if cfg!(debug_assertions) {
@@ -91,7 +91,11 @@ fn main() -> Result<()> {
                     .sorted_vec()
                     .iter()
                     .enumerate()
-                    .for_each(|(i, rec)| print!("  {}. {:<18} {}\r\n", i + 1, rec.0, rec.1));
+                    .for_each(|(i, rec)| {
+                        screenln!("  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap()
+                    });
+
+                tui::confirm_action()?;
             }
 
             Some(2) => {
@@ -145,13 +149,13 @@ fn main() -> Result<()> {
                     5000,
                 );
 
-                screenln!("Upgrades:")?;
+                // tui::screen::full_clear()?;
                 let _ = tui::menu::Menu::builder()
                     .add_item(shrapnel)
                     .add_item(lvc)
                     .add_item(tsu)
                     .build()
-                    .exec()?;
+                    .exec("Upgrades:")?;
             }
 
             Some(3) => {
