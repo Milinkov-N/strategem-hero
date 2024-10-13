@@ -3,7 +3,7 @@ use crossterm::{
     ExecutableCommand,
 };
 
-use crate::error::Result;
+use crate::{error::Result, screenln};
 
 pub mod menu;
 pub mod screen;
@@ -23,6 +23,22 @@ impl Drop for HideCursorGuard {
     fn drop(&mut self) {
         std::io::stdout().execute(crossterm::cursor::Show).unwrap();
     }
+}
+
+pub fn confirm_quit(action: Option<&str>) -> Result<()> {
+    screenln!("Press 'q' to {}...", action.unwrap_or("quit"))?;
+    while let Event::Key(ev) = crossterm::event::read()? {
+        if let KeyEvent {
+            code: KeyCode::Char('q'),
+            kind: KeyEventKind::Press,
+            ..
+        } = ev
+        {
+            return Ok(());
+        }
+    }
+
+    Ok(())
 }
 
 pub fn confirm_action() -> Result<bool> {
