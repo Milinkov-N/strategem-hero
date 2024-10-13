@@ -130,7 +130,7 @@ impl App {
             .add_item("Delete Data")
             .add_item("Quit")
             .build()
-            .exec("Main Menu:")?
+            .exec("Main Menu")?
         {
             Some(0) => self.screen.set_game(),
             Some(1) => self.screen.set_leaderboard(),
@@ -193,7 +193,7 @@ impl App {
             .add_item(&self.upgrades[1])
             .add_item(&self.upgrades[2])
             .build()
-            .exec(&format!("Upgrades (You have {} DP):", self.player.wallet()))?
+            .exec(&format!("Upgrades (You have {} DP)", self.player.wallet()))?
         {
             Some(0) => handle_purchase(&mut self.player, &mut self.upgrades[0])?,
             Some(1) => handle_purchase(&mut self.player, &mut self.upgrades[1])?,

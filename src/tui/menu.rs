@@ -16,7 +16,7 @@ impl<T: Display> Menu<T> {
     pub fn exec(&self, prompt: &str) -> Result<Option<usize>> {
         let mut idx: usize = 0;
 
-        screenln!("{prompt}")?;
+        screenln!("----[ {prompt} ]----------")?;
         loop {
             let _screen_scope = crate::tui::screen::scope();
 
