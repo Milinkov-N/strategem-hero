@@ -4,7 +4,7 @@ use crate::{
     error::Result,
     event::{Controls, Key},
     screenln,
-    storage::Leaderboard,
+    storage::{Leaderboard, Storage},
     strategem::Strategem,
     tui::{self, HideCursor},
     utility::{self, GameTimer, Multiplier, Penalty},

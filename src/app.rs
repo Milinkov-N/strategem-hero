@@ -5,9 +5,8 @@ use crate::{
     event::Controls,
     game::Game,
     screenln,
-    storage::{Leaderboard, UpgradeItem},
-    utility::GameTimer,
-    utility::Penalty,
+    storage::{Leaderboard, Storage, Upgrades},
+    utility::{GameTimer, Penalty},
 };
 
 pub const LOGO: &str = r#"     _             _                                  _                    
@@ -51,39 +50,24 @@ impl Screen {
     }
 }
 
-pub struct App<'a> {
+pub struct App {
     screen: Screen,
     leaderboard: Leaderboard,
     is_running: bool,
-    upgrades: Vec<UpgradeItem<'a>>,
+    upgrades: Upgrades,
 }
 
-impl<'a> App<'a> {
+impl App {
     pub fn init() -> Result<Self> {
         crate::utility::setup_data_dir()?;
         let leaderboard = Leaderboard::open()?;
+        let upgrades = Upgrades::open()?;
 
         Ok(Self {
             screen: Default::default(),
             leaderboard,
             is_running: true,
-            upgrades: vec![
-                UpgradeItem::new(
-                    "Exploding Shrapnel",
-                    "increases all strategem rewards by +100 Democracy Points",
-                    2500,
-                ),
-                UpgradeItem::new(
-                    "Liquid-Ventilated Cockpit",
-                    "reduces time penalty after failed strategem",
-                    3000,
-                ),
-                UpgradeItem::new(
-                    "Targeting Software Upgrade",
-                    "increases time reward after successfully completing strategem by +0.5s",
-                    5000,
-                ),
-            ],
+            upgrades,
         })
     }
 
@@ -199,7 +183,7 @@ impl<'a> App<'a> {
             _ => todo!(),
         }
 
-        Ok(())
+        self.upgrades.save()
     }
 
     fn render_delete_data(self) -> Result<()> {
