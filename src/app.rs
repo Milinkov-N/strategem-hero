@@ -1,7 +1,12 @@
 use std::time::Duration;
 
 use crate::{
-    error::Result, event::Controls, game::Game, screenln, storage::Leaderboard, utility::GameTimer,
+    error::Result,
+    event::Controls,
+    game::Game,
+    screenln,
+    storage::{Leaderboard, UpgradeItem},
+    utility::GameTimer,
     utility::Penalty,
 };
 
@@ -85,6 +90,21 @@ impl App {
 
     pub fn run(mut self) -> Result<()> {
         crossterm::terminal::enable_raw_mode()?;
+        let mut shrapnel = UpgradeItem::new(
+            "Exploding Shrapnel",
+            "increases all strategem rewards by +100 Democracy Points",
+            2500,
+        );
+        let mut lvc = UpgradeItem::new(
+            "Liquid-Ventilated Cockpit",
+            "reduces time penalty after failed strategem",
+            3000,
+        );
+        let mut tsu = UpgradeItem::new(
+            "Targeting Software Upgrade",
+            "increases time reward after successfully completing strategem by +0.5s",
+            5000,
+        );
 
         'main_loop: loop {
             let _sc = crate::tui::screen::cleaner();
@@ -141,64 +161,18 @@ impl App {
                 }
 
                 Screen::Upgrades => {
-                    struct UpgradeItem<'a> {
-                        name: &'a str,
-                        desc: &'a str,
-                        price: u32,
-                        purchased: bool,
-                    }
-
-                    impl<'a> UpgradeItem<'a> {
-                        pub fn new(name: &'a str, desc: &'a str, price: u32) -> Self {
-                            Self {
-                                name,
-                                desc,
-                                price,
-                                purchased: false,
-                            }
-                        }
-                    }
-
-                    impl<'a> std::fmt::Display for UpgradeItem<'a> {
-                        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                            write!(
-                                f,
-                                "{:<32}[{}]\n\t{}",
-                                self.name,
-                                if self.purchased {
-                                    "Purchased".to_string()
-                                } else {
-                                    format!("{} DP", self.price)
-                                },
-                                self.desc
-                            )
-                        }
-                    }
-
-                    let shrapnel = UpgradeItem::new(
-                        "Exploding Shrapnel",
-                        "increases all strategem rewards by +100 Democracy Points",
-                        2500,
-                    );
-                    let lvc = UpgradeItem::new(
-                        "Liquid-Ventilated Cockpit",
-                        "reduces time penalty after failed strategem",
-                        3000,
-                    );
-                    let tsu = UpgradeItem::new(
-                        "Targeting Software Upgrade",
-                        "increases time reward after successfully completing strategem by +0.5s",
-                        5000,
-                    );
-
                     screenln!("{LOGO}")?;
                     match crate::tui::menu::Menu::builder()
-                        .add_item(shrapnel)
-                        .add_item(lvc)
-                        .add_item(tsu)
+                        .add_item(&shrapnel)
+                        .add_item(&lvc)
+                        .add_item(&tsu)
                         .build()
                         .exec("Upgrades:")?
                     {
+                        Some(0) => shrapnel.set_purchased(),
+                        Some(1) => lvc.set_purchased(),
+                        Some(2) => tsu.set_purchased(),
+
                         None => self.screen.set_main(),
                         _ => todo!(),
                     }
