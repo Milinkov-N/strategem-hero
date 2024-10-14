@@ -67,24 +67,22 @@ impl Display for GameTimer {
     }
 }
 
-pub struct Penalty {
+pub struct InputFreeze {
     counter: Cell<u32>,
-    max_penalty: u32,
-    step: u32,
+    frames: u32,
 }
 
-impl Penalty {
-    pub fn new(max_penalty: u32, step: u32) -> Self {
+impl InputFreeze {
+    pub fn new(frames: u32) -> Self {
         Self {
             counter: Cell::new(0),
-            max_penalty,
-            step,
+            frames,
         }
     }
 
     pub fn apply(&self, on_done: impl FnOnce()) {
-        if self.counter.get() < self.max_penalty {
-            self.counter.set(self.counter.get() + self.step);
+        if self.counter.get() < self.frames {
+            self.counter.set(self.counter.get() + 1);
         } else {
             self.counter.set(0);
             on_done();

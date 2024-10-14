@@ -7,7 +7,7 @@ use crate::{
     storage::{Leaderboard, PlayerData, Storage},
     strategem::Strategem,
     tui,
-    utility::{self, GameTimer, Multiplier, Penalty},
+    utility::{self, GameTimer, InputFreeze, Multiplier},
 };
 
 struct GameState {
@@ -39,7 +39,7 @@ pub struct Game {
     state: GameState,
     player: PlayerData,
     leaderboard: Leaderboard,
-    penalty: Penalty,
+    penalty: InputFreeze,
     controls: Controls,
     is_running: bool,
 }
@@ -50,7 +50,7 @@ impl Game {
         leaderboard: Leaderboard,
         game_timer: GameTimer,
         controls: Controls,
-        penalty: Penalty,
+        penalty: InputFreeze,
     ) -> Self {
         Self {
             state: GameState::new(game_timer),

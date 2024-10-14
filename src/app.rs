@@ -6,7 +6,7 @@ use crate::{
     game::Game,
     screenln,
     storage::{Leaderboard, PlayerData, Storage, UpgradeItem, Upgrades},
-    utility::{GameTimer, Penalty},
+    utility::{GameTimer, InputFreeze},
 };
 
 pub const LOGO: &str = r#"     _             _                                  _                    
@@ -151,7 +151,7 @@ impl App {
             Duration::from_secs(30)
         };
         let game_timer = GameTimer::start_from(secs);
-        let penalty = Penalty::new(250, 10);
+        let penalty = InputFreeze::new(30);
         let controls = if std::env::args().any(|arg| arg.eq("--wasd")) {
             Controls::wasd()
         } else {
