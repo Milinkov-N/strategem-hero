@@ -2,6 +2,7 @@ use std::{
     collections::{btree_map::Iter, BTreeMap},
     fs::File,
     io::Write,
+    time::Duration,
 };
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -40,13 +41,10 @@ where
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PlayerData {
     wallet: usize,
-}
-
-impl Storage for PlayerData {
-    const FILENAME: &'static str = "player_data";
+    penalty_debuff_millis: u64,
 }
 
 impl PlayerData {
@@ -61,6 +59,27 @@ impl PlayerData {
     pub fn write_off_from_wallet(&mut self, value: usize) {
         self.wallet = self.wallet.saturating_sub(value);
     }
+
+    pub fn penalty_debuff_dur(&self) -> Duration {
+        Duration::from_millis(self.penalty_debuff_millis)
+    }
+
+    pub fn set_penalty_debuff(&mut self, millis: u64) {
+        self.penalty_debuff_millis = millis;
+    }
+}
+
+impl Default for PlayerData {
+    fn default() -> Self {
+        Self {
+            wallet: 0,
+            penalty_debuff_millis: 1000,
+        }
+    }
+}
+
+impl Storage for PlayerData {
+    const FILENAME: &'static str = "player_data";
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -126,17 +145,17 @@ impl Default for Upgrades {
         Self(vec![
             UpgradeItem::new(
                 "Exploding Shrapnel",
-                "increases all strategem rewards by +100 Democracy Points",
+                "Increases all strategem rewards by +100 Democracy Points",
                 2500,
             ),
             UpgradeItem::new(
                 "Liquid-Ventilated Cockpit",
-                "reduces time penalty after failed strategem",
+                "Reduces time penalty after failed strategem",
                 3000,
             ),
             UpgradeItem::new(
                 "Targeting Software Upgrade",
-                "increases time reward after successfully completing strategem by +0.5s",
+                "Increases time reward after successfully completing strategem by +0.5s",
                 5000,
             ),
         ])

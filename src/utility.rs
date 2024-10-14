@@ -40,6 +40,10 @@ impl GameTimer {
         self.game_over_time += dur;
     }
 
+    pub fn sub(&mut self, dur: Duration) {
+        self.game_over_time -= dur;
+    }
+
     pub fn reset(&mut self) {
         self.game_over_time = chrono::Utc::now() + self.initial_duration;
     }

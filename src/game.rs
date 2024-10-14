@@ -39,7 +39,7 @@ pub struct Game {
     state: GameState,
     player: PlayerData,
     leaderboard: Leaderboard,
-    penalty: InputFreeze,
+    freeze: InputFreeze,
     controls: Controls,
     is_running: bool,
 }
@@ -50,13 +50,13 @@ impl Game {
         leaderboard: Leaderboard,
         game_timer: GameTimer,
         controls: Controls,
-        penalty: InputFreeze,
+        freeze: InputFreeze,
     ) -> Self {
         Self {
             state: GameState::new(game_timer),
             player,
             leaderboard,
-            penalty,
+            freeze,
             controls,
             is_running: true,
         }
@@ -124,7 +124,10 @@ impl Game {
             *strategem = crate::strategem::random();
         } else if !strategem.is_valid() {
             *streak = 0;
-            self.penalty.apply(|| strategem.reset());
+            self.freeze.apply(|| {
+                strategem.reset();
+                game_timer.sub(self.player.penalty_debuff_dur());
+            });
         }
     }
 

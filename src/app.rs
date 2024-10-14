@@ -5,7 +5,7 @@ use crate::{
     event::Controls,
     game::Game,
     screenln,
-    storage::{Leaderboard, PlayerData, Storage, UpgradeItem, Upgrades},
+    storage::{Leaderboard, PlayerData, Storage, Upgrades},
     utility::{GameTimer, InputFreeze},
 };
 
@@ -178,19 +178,6 @@ impl App {
 
     fn render_upgrades(&mut self) -> Result<()> {
         screenln!("{LOGO}")?;
-        let handle_purchase = |player: &mut PlayerData, upgrade: &mut UpgradeItem| -> Result<()> {
-            if upgrade.is_purchased() {
-                return Ok(());
-            }
-
-            if player.wallet() >= upgrade.price() {
-                player.write_off_from_wallet(upgrade.price());
-                upgrade.set_purchased();
-                player.save()?;
-            }
-
-            Ok(())
-        };
 
         match crate::tui::menu::Menu::builder()
             .add_item(&self.upgrades[0])
@@ -199,14 +186,23 @@ impl App {
             .build()
             .exec(&format!("Upgrades (You have {} DP)", self.player.wallet()))?
         {
-            Some(0) => handle_purchase(&mut self.player, &mut self.upgrades[0])?,
-            Some(1) => handle_purchase(&mut self.player, &mut self.upgrades[1])?,
-            Some(2) => handle_purchase(&mut self.player, &mut self.upgrades[2])?,
+            Some(0) => {
+                if self.purchase_upgrade(0)? {
+                    self.player.set_penalty_debuff(500);
+                }
+            }
+            Some(1) => {
+                self.purchase_upgrade(1)?;
+            }
+            Some(2) => {
+                self.purchase_upgrade(2)?;
+            }
 
             None => self.screen.set_main(),
             _ => todo!(),
-        }
+        };
 
+        self.player.save()?;
         self.upgrades.save()
     }
 
@@ -219,5 +215,22 @@ impl App {
         crate::tui::confirm_quit(Some("return to main menu"))?;
 
         Ok(())
+    }
+
+    fn purchase_upgrade(&mut self, idx: usize) -> Result<bool> {
+        let upgrade = &mut self.upgrades[idx];
+        if upgrade.is_purchased() {
+            return Ok(false);
+        }
+
+        let mut purchased = false;
+        if self.player.wallet() >= upgrade.price() {
+            self.player.write_off_from_wallet(upgrade.price());
+            upgrade.set_purchased();
+            purchased = true;
+            self.player.save()?;
+        }
+
+        Ok(purchased)
     }
 }
