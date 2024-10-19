@@ -14,6 +14,7 @@ This is simple cli game written in Rust, copying (actually just loosely followin
   - Hard - from 7 and above inputs
 - Each level of strategems gives different score
 - Tracking of best score between launches
+- Upgrade system
 - Subcommands to:
   - Print leaderboard: `strategem-hero leaderboard`
   - Delete all game files: `strategem-hero delete-data`
@@ -40,14 +41,13 @@ cargo build --release
 
 ## Game Files
 
-As of now in version 0.7.\* the only game file is sqlite database located in
-folders as follows:
+Game files location follows as is:
 
 - Windows: `C:\Users\<User>\AppData\Roaming\strategem-hero`
 - MacOS: `$HOME/Library/Application Support/strategem-hero`
 - Linux: `$HOME/.local/share/strategem-hero`
 
-And for each minor or major version there is different folder (mostly for me to not worry about database migrations).
+And for each minor or major version there is different folder to not corrupt your save files.
 
 > Note: `strategem-hero delete-data` command deletes whole game folder.
 
