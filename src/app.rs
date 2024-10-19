@@ -112,7 +112,7 @@ impl App {
 
             match self.screen {
                 Screen::Main => self.render_main()?,
-                Screen::Game => return self.render_game(),
+                Screen::Game => self.render_game()?,
                 Screen::Leaderboard => self.render_leaderboard()?,
                 Screen::Upgrades => self.render_upgrades()?,
                 Screen::DeleteData => return self.render_delete_data(),
@@ -144,7 +144,7 @@ impl App {
         Ok(())
     }
 
-    fn render_game(self) -> Result<()> {
+    fn render_game(&mut self) -> Result<()> {
         let secs = if cfg!(debug_assertions) {
             Duration::from_secs(10)
         } else {
@@ -157,8 +157,19 @@ impl App {
         } else {
             Controls::arrows()
         };
-        let mut game = Game::new(self.player, self.leaderboard, game_timer, controls, penalty);
-        game.run()
+        let mut game = Game::new(
+            &mut self.player,
+            &mut self.leaderboard,
+            game_timer,
+            controls,
+            penalty,
+        );
+
+        if !game.run()? {
+            self.screen.set_main();
+        }
+
+        Ok(())
     }
 
     fn render_leaderboard(&mut self) -> Result<()> {

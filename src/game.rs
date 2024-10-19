@@ -35,19 +35,19 @@ impl GameState {
     }
 }
 
-pub struct Game {
+pub struct Game<'a> {
     state: GameState,
-    player: PlayerData,
-    leaderboard: Leaderboard,
+    player: &'a mut PlayerData,
+    leaderboard: &'a mut Leaderboard,
     freeze: InputFreeze,
     controls: Controls,
     is_running: bool,
 }
 
-impl Game {
+impl<'a> Game<'a> {
     pub fn new(
-        player: PlayerData,
-        leaderboard: Leaderboard,
+        player: &'a mut PlayerData,
+        leaderboard: &'a mut Leaderboard,
         game_timer: GameTimer,
         controls: Controls,
         freeze: InputFreeze,
@@ -62,7 +62,9 @@ impl Game {
         }
     }
 
-    pub fn run(&mut self) -> Result<()> {
+    pub fn run(&mut self) -> Result<bool> {
+        let mut restart = false;
+
         tui::screen::full_clear()?;
 
         while self.is_running {
@@ -73,12 +75,12 @@ impl Game {
                 self.update_state();
 
                 if self.state.game_timer.is_over() {
-                    self.handle_game_over()?;
+                    restart = self.handle_game_over()?;
                 }
             }
         }
 
-        Ok(())
+        Ok(restart)
     }
 
     fn handle_input(&mut self) -> Result<()> {
@@ -136,7 +138,7 @@ impl Game {
         }
     }
 
-    fn handle_game_over(&mut self) -> Result<()> {
+    fn handle_game_over(&mut self) -> Result<bool> {
         let mut _sc = tui::screen::cleaner();
 
         tui::screen::clear()?;
@@ -166,11 +168,14 @@ impl Game {
             self.freeze.reset();
         } else {
             self.is_running = false;
+            return Ok(false);
         }
 
         self.player.add_to_wallet(self.state.score);
         self.player.save()?;
-        self.leaderboard.save()
+        self.leaderboard.save()?;
+
+        Ok(true)
     }
 
     fn print_leaderboard(&mut self, curr_score: usize) -> Result<()> {
