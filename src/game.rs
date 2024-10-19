@@ -138,6 +138,15 @@ impl Game {
 
     fn handle_game_over(&mut self) -> Result<()> {
         let mut _sc = tui::screen::cleaner();
+
+        tui::screen::clear()?;
+        screenln!(
+            "Game Over! You scored {} Democracy Points",
+            self.state.score
+        )?;
+
+        self.print_leaderboard(self.state.score)?;
+
         let (_, score) =
             self.leaderboard
                 .iter()
@@ -147,17 +156,9 @@ impl Game {
                     "Player not found in database",
                 ))?;
 
-        tui::screen::clear()?;
-        screenln!(
-            "Game Over! You scored {} Democracy Points",
-            self.state.score
-        )?;
-
         if &self.state.score > score {
             self.leaderboard.insert("You", self.state.score);
         }
-
-        self.print_leaderboard(self.state.score)?;
 
         screenln!("Restart the game [y/n]?")?;
         if tui::confirm_action()? {
@@ -179,8 +180,8 @@ impl Game {
             .iter()
             .enumerate()
             .for_each(|(i, rec)| {
-                if rec.0.eq("You") && rec.1 > &curr_score {
-                    screenln!("  {}. {:<18} {} New record!", i + 1, rec.0, rec.1).unwrap();
+                if rec.0.eq("You") && &curr_score > rec.1 {
+                    screenln!("  {}. {:<18} {} New record!", i + 1, rec.0, curr_score).unwrap();
                 } else {
                     screenln!("  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap();
                 }
