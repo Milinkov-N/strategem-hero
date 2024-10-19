@@ -13,7 +13,7 @@ use crate::{
     strategem::{Strategem, StrategemClass, StrategemDifficulty},
 };
 
-const VERSION: &str = "0.7";
+const VERSION: &str = "0.8";
 
 pub struct GameTimer {
     initial_duration: Duration,
