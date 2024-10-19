@@ -46,6 +46,7 @@ pub struct PlayerData {
     wallet: usize,
     penalty_debuff_millis: u64,
     time_reward: u64,
+    bonus_score: usize,
 }
 
 impl PlayerData {
@@ -76,6 +77,14 @@ impl PlayerData {
     pub fn set_time_reward(&mut self, value: u64) {
         self.time_reward = value;
     }
+
+    pub fn bonus_score(&self) -> usize {
+        self.bonus_score
+    }
+
+    pub fn set_bonus_score(&mut self, value: usize) {
+        self.bonus_score = value;
+    }
 }
 
 impl Default for PlayerData {
@@ -84,6 +93,7 @@ impl Default for PlayerData {
             wallet: 0,
             penalty_debuff_millis: 1000,
             time_reward: 0,
+            bonus_score: 0,
         }
     }
 }

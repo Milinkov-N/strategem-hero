@@ -120,7 +120,11 @@ impl Game {
         if strategem.is_completed() {
             let base_reward = Duration::from_millis(1000);
             *streak += 1;
-            *score += utility::get_score_value(strategem.difficulty(), Multiplier::get(*streak));
+            *score += utility::get_score_value(
+                strategem.difficulty(),
+                Multiplier::get(*streak),
+                self.player.bonus_score(),
+            );
             game_timer.add(base_reward + self.player.time_reward_dur());
             *strategem = crate::strategem::random();
         } else if !strategem.is_valid() {

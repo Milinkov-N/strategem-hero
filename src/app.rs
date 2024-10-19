@@ -188,7 +188,7 @@ impl App {
         {
             Some(0) => {
                 if self.purchase_upgrade(0)? {
-                    // self.player.set_penalty_debuff(500);
+                    self.player.set_bonus_score(100);
                 }
             }
 

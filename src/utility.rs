@@ -124,11 +124,11 @@ impl Display for Multiplier {
     }
 }
 
-pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier) -> usize {
+pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier, bonus: usize) -> usize {
     use Multiplier::*;
     use StrategemDifficulty::*;
 
-    match (difficulty, tier) {
+    let base = match (difficulty, tier) {
         (Easy, First) => 50,
         (Medium, First) => 75,
         (Hard, First) => 100,
@@ -138,7 +138,9 @@ pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier) -> us
         (Easy, Third) => 125,
         (Medium, Third) => 190,
         (Hard, Third) => 250,
-    }
+    };
+
+    base + bonus
 }
 
 pub fn format_strategem_name(strategem: &Strategem) -> String {
