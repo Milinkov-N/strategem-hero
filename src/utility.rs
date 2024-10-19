@@ -1,10 +1,9 @@
 use std::{
     fmt::Display,
     path::{Path, PathBuf},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
-use chrono::{DateTime, TimeDelta, Utc};
 use crossterm::style::Stylize;
 
 use crate::{
@@ -16,23 +15,23 @@ const VERSION: &str = "0.8";
 
 pub struct GameTimer {
     initial_duration: Duration,
-    game_over_time: DateTime<Utc>,
+    game_over_time: std::time::Instant,
 }
 
 impl GameTimer {
     pub fn start_from(dur: Duration) -> Self {
         Self {
             initial_duration: dur,
-            game_over_time: chrono::Utc::now() + dur,
+            game_over_time: std::time::Instant::now() + dur,
         }
     }
 
-    pub fn remaining(&self) -> TimeDelta {
-        self.game_over_time - chrono::Utc::now()
+    pub fn remaining(&self) -> Duration {
+        self.game_over_time - Instant::now()
     }
 
     pub fn is_over(&self) -> bool {
-        self.game_over_time - chrono::Utc::now() <= TimeDelta::zero()
+        self.game_over_time - Instant::now() <= Duration::ZERO
     }
 
     pub fn add(&mut self, dur: Duration) {
@@ -44,14 +43,14 @@ impl GameTimer {
     }
 
     pub fn reset(&mut self) {
-        self.game_over_time = chrono::Utc::now() + self.initial_duration;
+        self.game_over_time = Instant::now() + self.initial_duration;
     }
 }
 
 impl Display for GameTimer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let step = self.initial_duration.as_secs() / 10;
-        let remaining_steps = self.remaining().num_seconds() / step as i64 + 1;
+        let remaining_steps = self.remaining().as_secs() / step + 1;
         let time_left = self.remaining();
         let steps_str = "#".repeat(remaining_steps.min(10) as usize);
 
@@ -64,8 +63,8 @@ impl Display for GameTimer {
                 _ => steps_str.green(),
             },
             " ".repeat(10 - remaining_steps.min(10) as usize),
-            time_left.num_seconds(),
-            (time_left.num_milliseconds() - time_left.num_seconds() * 1000) / 100
+            time_left.as_secs(),
+            time_left.subsec_millis() / 100
         )
     }
 }
