@@ -188,12 +188,14 @@ impl App {
         {
             Some(0) => {
                 if self.purchase_upgrade(0)? {
-                    self.player.set_penalty_debuff(500);
+                    // self.player.set_penalty_debuff(500);
                 }
             }
 
             Some(1) => {
-                self.purchase_upgrade(1)?;
+                if self.purchase_upgrade(1)? {
+                    self.player.set_penalty_debuff(500);
+                }
             }
 
             Some(2) => {
