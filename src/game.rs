@@ -7,7 +7,7 @@ use crate::{
     storage::{Leaderboard, PlayerData, Storage},
     strategem::Strategem,
     tui,
-    utility::{self, GameTimer, InputFreeze, Multiplier},
+    utility::{self, FreezeState, GameTimer, InputFreeze, Multiplier},
 };
 
 struct GameState {
@@ -129,10 +129,10 @@ impl Game {
             *strategem = crate::strategem::random();
         } else if !strategem.is_valid() {
             *streak = 0;
-            self.freeze.apply(|| {
+            if let FreezeState::Completed = self.freeze.ping() {
                 strategem.reset();
                 game_timer.sub(self.player.penalty_debuff_dur());
-            });
+            };
         }
     }
 
@@ -162,6 +162,7 @@ impl Game {
         screenln!("Restart the game [y/n]?")?;
         if tui::confirm_action()? {
             self.state.reset();
+            self.freeze.reset();
         } else {
             self.is_running = false;
         }

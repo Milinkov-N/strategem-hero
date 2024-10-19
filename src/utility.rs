@@ -1,5 +1,4 @@
 use std::{
-    cell::Cell,
     fmt::Display,
     path::{Path, PathBuf},
     time::Duration,
@@ -71,26 +70,55 @@ impl Display for GameTimer {
     }
 }
 
+#[derive(Default, Clone, Copy)]
+pub enum FreezeState {
+    #[default]
+    NotActivated,
+    Freezed,
+    Completed,
+}
+
 pub struct InputFreeze {
-    counter: Cell<u32>,
+    counter: u32,
     frames: u32,
+    state: FreezeState,
 }
 
 impl InputFreeze {
     pub fn new(frames: u32) -> Self {
         Self {
-            counter: Cell::new(0),
+            counter: 0,
             frames,
+            state: Default::default(),
         }
     }
 
-    pub fn apply(&self, on_done: impl FnOnce()) {
-        if self.counter.get() < self.frames {
-            self.counter.set(self.counter.get() + 1);
-        } else {
-            self.counter.set(0);
-            on_done();
+    pub fn reset(&mut self) {
+        self.state = FreezeState::NotActivated;
+        self.counter = 0;
+    }
+
+    pub fn ping(&mut self) -> FreezeState {
+        match self.state {
+            FreezeState::NotActivated => {
+                self.counter += 1;
+                self.state = FreezeState::Freezed;
+            }
+
+            FreezeState::Freezed => {
+                if self.counter < self.frames {
+                    self.counter += 1;
+                } else {
+                    self.counter = 0;
+                    self.state = FreezeState::NotActivated;
+                    return FreezeState::Completed;
+                }
+            }
+
+            _ => (),
         }
+
+        self.state
     }
 }
 
