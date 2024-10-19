@@ -1,12 +1,13 @@
-use std::{io::Write, time::Duration};
+use std::time::Duration;
 
 use crate::{
     error::Result,
     event::{Controls, Key},
-    storage::Leaderboard,
+    screenln,
+    storage::{Leaderboard, PlayerData, Storage},
     strategem::Strategem,
-    tui::{self, HideCursor, ScreenWriter},
-    utility::{self, GameTimer, Multiplier, Penalty},
+    tui,
+    utility::{self, GameTimer, InputFreeze, Multiplier},
 };
 
 struct GameState {
@@ -36,30 +37,33 @@ impl GameState {
 
 pub struct Game {
     state: GameState,
-    store: Leaderboard,
-    penalty: Penalty,
+    player: PlayerData,
+    leaderboard: Leaderboard,
+    freeze: InputFreeze,
     controls: Controls,
     is_running: bool,
 }
 
 impl Game {
     pub fn new(
-        store: Leaderboard,
+        player: PlayerData,
+        leaderboard: Leaderboard,
         game_timer: GameTimer,
         controls: Controls,
-        penalty: Penalty,
+        freeze: InputFreeze,
     ) -> Self {
         Self {
             state: GameState::new(game_timer),
-            store,
-            penalty,
+            player,
+            leaderboard,
+            freeze,
             controls,
             is_running: true,
         }
     }
 
     pub fn run(&mut self) -> Result<()> {
-        let _guard = HideCursor::hide()?;
+        tui::screen::full_clear()?;
 
         while self.is_running {
             if crossterm::event::poll(Duration::from_millis(17))? {
@@ -80,7 +84,7 @@ impl Game {
     fn handle_input(&mut self) -> Result<()> {
         match crate::event::read(&self.controls)? {
             Some(Key::Escape) => {
-                ScreenWriter::clear()?;
+                tui::screen::clear()?;
                 self.is_running = false;
             }
             Some(key) => self.state.strategem.assert_key(key.into()),
@@ -92,17 +96,16 @@ impl Game {
     }
 
     fn print_frame(&mut self) -> Result<()> {
-        let mut screen = ScreenWriter::new();
-        writeln!(
-            screen,
+        screenln!(
             "Score: {} {:>5}",
             self.state.score,
             Multiplier::get(self.state.streak)
         )?;
-        writeln!(screen, "{}", self.state.game_timer)?;
-        writeln!(screen, "{}", self.state.strategem)?;
-        writeln!(screen, "Controls: {}", self.controls)?;
-        Ok(())
+        screenln!("{}", self.state.game_timer)?;
+        screenln!("{}", self.state.strategem)?;
+        screenln!("Controls: {}", self.controls)?;
+
+        tui::screen::move_back()
     }
 
     fn update_state(&mut self) {
@@ -115,20 +118,28 @@ impl Game {
         } = &mut self.state;
 
         if strategem.is_completed() {
+            let base_reward = Duration::from_millis(1000);
             *streak += 1;
-            *score += utility::get_score_value(strategem.difficulty(), Multiplier::get(*streak));
-            game_timer.add(Duration::from_millis(1500));
+            *score += utility::get_score_value(
+                strategem.difficulty(),
+                Multiplier::get(*streak),
+                self.player.bonus_score(),
+            );
+            game_timer.add(base_reward + self.player.time_reward_dur());
             *strategem = crate::strategem::random();
         } else if !strategem.is_valid() {
             *streak = 0;
-            self.penalty.apply(|| strategem.reset());
+            self.freeze.apply(|| {
+                strategem.reset();
+                game_timer.sub(self.player.penalty_debuff_dur());
+            });
         }
     }
 
     fn handle_game_over(&mut self) -> Result<()> {
-        let mut screen = ScreenWriter::new();
+        let mut _sc = tui::screen::cleaner();
         let (_, score) =
-            self.store
+            self.leaderboard
                 .iter()
                 .find(|rec| rec.0.eq("You"))
                 .ok_or(std::io::Error::new(
@@ -136,43 +147,41 @@ impl Game {
                     "Player not found in database",
                 ))?;
 
-        ScreenWriter::clear()?;
-        writeln!(
-            screen,
+        tui::screen::clear()?;
+        screenln!(
             "Game Over! You scored {} Democracy Points",
             self.state.score
         )?;
 
         if &self.state.score > score {
-            self.store.insert("You", self.state.score);
+            self.leaderboard.insert("You", self.state.score);
         }
 
-        self.print_leaderboard(&mut screen, self.state.score)?;
+        self.print_leaderboard(self.state.score)?;
 
-        writeln!(screen, "Restart the game [y/n]?")?;
-
+        screenln!("Restart the game [y/n]?")?;
         if tui::confirm_action()? {
             self.state.reset();
         } else {
             self.is_running = false;
         }
 
-        self.store.save()?;
-        drop(screen);
-        ScreenWriter::clear()
+        self.player.add_to_wallet(self.state.score);
+        self.player.save()?;
+        self.leaderboard.save()
     }
 
-    fn print_leaderboard(&mut self, screen: &mut ScreenWriter, curr_score: usize) -> Result<()> {
-        writeln!(screen, "Leaderboard:")?;
-        self.store
+    fn print_leaderboard(&mut self, curr_score: usize) -> Result<()> {
+        screenln!("Leaderboard:")?;
+        self.leaderboard
             .sorted_vec()
             .iter()
             .enumerate()
             .for_each(|(i, rec)| {
                 if rec.0.eq("You") && rec.1 > &curr_score {
-                    writeln!(screen, "  {}. {:<18} {} New record!", i + 1, rec.0, rec.1).unwrap();
+                    screenln!("  {}. {:<18} {} New record!", i + 1, rec.0, rec.1).unwrap();
                 } else {
-                    writeln!(screen, "  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap();
+                    screenln!("  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap();
                 }
             });
 

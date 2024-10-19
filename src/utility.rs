@@ -40,6 +40,10 @@ impl GameTimer {
         self.game_over_time += dur;
     }
 
+    pub fn sub(&mut self, dur: Duration) {
+        self.game_over_time -= dur;
+    }
+
     pub fn reset(&mut self) {
         self.game_over_time = chrono::Utc::now() + self.initial_duration;
     }
@@ -67,24 +71,22 @@ impl Display for GameTimer {
     }
 }
 
-pub struct Penalty {
+pub struct InputFreeze {
     counter: Cell<u32>,
-    max_penalty: u32,
-    step: u32,
+    frames: u32,
 }
 
-impl Penalty {
-    pub fn new(max_penalty: u32, step: u32) -> Self {
+impl InputFreeze {
+    pub fn new(frames: u32) -> Self {
         Self {
             counter: Cell::new(0),
-            max_penalty,
-            step,
+            frames,
         }
     }
 
     pub fn apply(&self, on_done: impl FnOnce()) {
-        if self.counter.get() < self.max_penalty {
-            self.counter.set(self.counter.get() + self.step);
+        if self.counter.get() < self.frames {
+            self.counter.set(self.counter.get() + 1);
         } else {
             self.counter.set(0);
             on_done();
@@ -122,11 +124,11 @@ impl Display for Multiplier {
     }
 }
 
-pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier) -> usize {
+pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier, bonus: usize) -> usize {
     use Multiplier::*;
     use StrategemDifficulty::*;
 
-    match (difficulty, tier) {
+    let base = match (difficulty, tier) {
         (Easy, First) => 50,
         (Medium, First) => 75,
         (Hard, First) => 100,
@@ -136,7 +138,9 @@ pub fn get_score_value(difficulty: &StrategemDifficulty, tier: Multiplier) -> us
         (Easy, Third) => 125,
         (Medium, Third) => 190,
         (Hard, Third) => 250,
-    }
+    };
+
+    base + bonus
 }
 
 pub fn format_strategem_name(strategem: &Strategem) -> String {
@@ -210,6 +214,14 @@ pub fn data_dir() -> Result<PathBuf> {
             .join(GAME_DIR)
             .join(VERSION))
     }
+}
+
+pub fn setup_data_dir() -> Result<()> {
+    let datadir = data_dir()?;
+    if !datadir.exists() {
+        std::fs::create_dir_all(&datadir)?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
