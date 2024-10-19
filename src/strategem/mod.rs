@@ -114,7 +114,7 @@ impl Strategem {
 impl Display for Strategem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fmt_name = format_strategem_name(self);
-        writeln!(f, "\x1b[K{}\n", fmt_name)?;
+        writeln!(f, "\x1b[K{}", fmt_name)?;
 
         self.code.iter().enumerate().for_each(|(i, code)| {
             if let Some(key) = code {
