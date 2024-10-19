@@ -45,6 +45,7 @@ where
 pub struct PlayerData {
     wallet: usize,
     penalty_debuff_millis: u64,
+    time_reward: u64,
 }
 
 impl PlayerData {
@@ -67,6 +68,14 @@ impl PlayerData {
     pub fn set_penalty_debuff(&mut self, millis: u64) {
         self.penalty_debuff_millis = millis;
     }
+
+    pub fn time_reward_dur(&self) -> Duration {
+        Duration::from_millis(self.time_reward)
+    }
+
+    pub fn set_time_reward(&mut self, value: u64) {
+        self.time_reward = value;
+    }
 }
 
 impl Default for PlayerData {
@@ -74,6 +83,7 @@ impl Default for PlayerData {
         Self {
             wallet: 0,
             penalty_debuff_millis: 1000,
+            time_reward: 0,
         }
     }
 }

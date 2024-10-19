@@ -118,9 +118,10 @@ impl Game {
         } = &mut self.state;
 
         if strategem.is_completed() {
+            let base_reward = Duration::from_millis(1000);
             *streak += 1;
             *score += utility::get_score_value(strategem.difficulty(), Multiplier::get(*streak));
-            game_timer.add(Duration::from_millis(1500));
+            game_timer.add(base_reward + self.player.time_reward_dur());
             *strategem = crate::strategem::random();
         } else if !strategem.is_valid() {
             *streak = 0;

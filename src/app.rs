@@ -191,11 +191,15 @@ impl App {
                     self.player.set_penalty_debuff(500);
                 }
             }
+
             Some(1) => {
                 self.purchase_upgrade(1)?;
             }
+
             Some(2) => {
-                self.purchase_upgrade(2)?;
+                if self.purchase_upgrade(2)? {
+                    self.player.set_time_reward(500);
+                }
             }
 
             None => self.screen.set_main(),
