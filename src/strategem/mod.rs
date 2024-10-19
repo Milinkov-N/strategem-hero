@@ -101,7 +101,7 @@ impl Strategem {
     }
 
     pub fn is_completed(&self) -> bool {
-        self.valid && self.code[self.idx] == None
+        self.valid && self.code[self.idx].is_none()
     }
 
     pub fn reset(&mut self) {
@@ -113,8 +113,8 @@ impl Strategem {
 
 impl Display for Strategem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fmt_name = format_strategem_name(&self);
-        write!(f, "\x1b[K{}\n", fmt_name)?;
+        let fmt_name = format_strategem_name(self);
+        writeln!(f, "\x1b[K{}\n", fmt_name)?;
 
         self.code.iter().enumerate().for_each(|(i, code)| {
             if let Some(key) = code {
