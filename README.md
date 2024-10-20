@@ -26,7 +26,7 @@ You can install this game via `cargo install strategem-hero` command or download
 Alternatively you can build this game from source, following next steps:
 
 ```sh
-# clone repo from Github
+# clone repo from GitHub
 git clone https://github.com/Milinkov-N/strategem-hero.git
 
 # Go to the project directory
@@ -49,9 +49,9 @@ Game files location follows as is:
 
 And for each minor or major version there is different folder to not corrupt your save files.
 
-> Note: `strategem-hero delete-data` command deletes whole game folder.
+> Note: `strategem-hero delete-data` command deletes whole game folder. If you delete data through game interface, its only affects game files.
 
 ## Contribution
 
-If you find bug or some possible impovement in code, please, open an Issue!
+If you find bug or some possible improvement in code, please, open an Issue!
 And if you know possible solution, pull request will be greatly appriciated.

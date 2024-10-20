@@ -7,7 +7,7 @@ use crate::{
     storage::{Leaderboard, PlayerData, Storage},
     strategem::Strategem,
     tui,
-    utility::{self, GameTimer, InputFreeze, Multiplier},
+    utility::{self, FreezeState, GameTimer, InputFreeze, Multiplier},
 };
 
 struct GameState {
@@ -35,19 +35,19 @@ impl GameState {
     }
 }
 
-pub struct Game {
+pub struct Game<'a> {
     state: GameState,
-    player: PlayerData,
-    leaderboard: Leaderboard,
+    player: &'a mut PlayerData,
+    leaderboard: &'a mut Leaderboard,
     freeze: InputFreeze,
     controls: Controls,
     is_running: bool,
 }
 
-impl Game {
+impl<'a> Game<'a> {
     pub fn new(
-        player: PlayerData,
-        leaderboard: Leaderboard,
+        player: &'a mut PlayerData,
+        leaderboard: &'a mut Leaderboard,
         game_timer: GameTimer,
         controls: Controls,
         freeze: InputFreeze,
@@ -62,7 +62,9 @@ impl Game {
         }
     }
 
-    pub fn run(&mut self) -> Result<()> {
+    pub fn run(&mut self) -> Result<bool> {
+        let mut restart = false;
+
         tui::screen::full_clear()?;
 
         while self.is_running {
@@ -73,12 +75,12 @@ impl Game {
                 self.update_state();
 
                 if self.state.game_timer.is_over() {
-                    self.handle_game_over()?;
+                    restart = self.handle_game_over()?;
                 }
             }
         }
 
-        Ok(())
+        Ok(restart)
     }
 
     fn handle_input(&mut self) -> Result<()> {
@@ -129,15 +131,24 @@ impl Game {
             *strategem = crate::strategem::random();
         } else if !strategem.is_valid() {
             *streak = 0;
-            self.freeze.apply(|| {
+            if let FreezeState::Completed = self.freeze.ping() {
                 strategem.reset();
                 game_timer.sub(self.player.penalty_debuff_dur());
-            });
+            };
         }
     }
 
-    fn handle_game_over(&mut self) -> Result<()> {
+    fn handle_game_over(&mut self) -> Result<bool> {
         let mut _sc = tui::screen::cleaner();
+
+        tui::screen::clear()?;
+        screenln!(
+            "Game Over! You scored {} Democracy Points",
+            self.state.score
+        )?;
+
+        self.print_leaderboard(self.state.score)?;
+
         let (_, score) =
             self.leaderboard
                 .iter()
@@ -147,28 +158,24 @@ impl Game {
                     "Player not found in database",
                 ))?;
 
-        tui::screen::clear()?;
-        screenln!(
-            "Game Over! You scored {} Democracy Points",
-            self.state.score
-        )?;
-
         if &self.state.score > score {
             self.leaderboard.insert("You", self.state.score);
         }
 
-        self.print_leaderboard(self.state.score)?;
-
         screenln!("Restart the game [y/n]?")?;
         if tui::confirm_action()? {
             self.state.reset();
+            self.freeze.reset();
         } else {
             self.is_running = false;
+            return Ok(false);
         }
 
         self.player.add_to_wallet(self.state.score);
         self.player.save()?;
-        self.leaderboard.save()
+        self.leaderboard.save()?;
+
+        Ok(true)
     }
 
     fn print_leaderboard(&mut self, curr_score: usize) -> Result<()> {
@@ -178,8 +185,8 @@ impl Game {
             .iter()
             .enumerate()
             .for_each(|(i, rec)| {
-                if rec.0.eq("You") && rec.1 > &curr_score {
-                    screenln!("  {}. {:<18} {} New record!", i + 1, rec.0, rec.1).unwrap();
+                if rec.0.eq("You") && &curr_score > rec.1 {
+                    screenln!("  {}. {:<18} {} New record!", i + 1, rec.0, curr_score).unwrap();
                 } else {
                     screenln!("  {}. {:<18} {}", i + 1, rec.0, rec.1).unwrap();
                 }

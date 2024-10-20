@@ -1,7 +1,7 @@
 [package]
 name = "strategem-hero"
 description = "Simple CLI Game following Strategem Hero mini-game from Helldivers 2"
-version = "0.8.0"
+version = "0.8.1"
 edition = "2021"
 license = "MIT"
 authors = ["Milinkov Nikita <milinkov.nik@gmail.com>"]
@@ -19,7 +19,6 @@ panic = "abort"
 
 [dependencies]
 crossterm = { version = "0.27" }
-chrono = { version = "0.4" }
 rand = { version = "0.8" }
 bincode = "1.3.3"
 serde = { version = "1.0.210", features = ["derive"] }
