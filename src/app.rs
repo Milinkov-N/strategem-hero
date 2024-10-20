@@ -115,11 +115,11 @@ impl App {
                 Screen::Game => self.render_game()?,
                 Screen::Leaderboard => self.render_leaderboard()?,
                 Screen::Upgrades => self.render_upgrades()?,
-                Screen::DeleteData => return self.render_delete_data(),
+                Screen::DeleteData => self.render_delete_data()?,
             }
         }
-        crossterm::terminal::disable_raw_mode()?;
 
+        crossterm::terminal::disable_raw_mode()?;
         Ok(())
     }
 
@@ -223,14 +223,15 @@ impl App {
         self.upgrades.save()
     }
 
-    fn render_delete_data(self) -> Result<()> {
-        if let Some(datadir) = crate::utility::data_dir()?.parent() {
-            std::fs::remove_dir_all(datadir)?;
+    fn render_delete_data(&mut self) -> Result<()> {
+        let datadir = crate::utility::data_dir()?;
+        for entry in std::fs::read_dir(datadir)? {
+            std::fs::remove_file(entry?.path())?;
         }
 
-        screenln!("Deleted all game-related data successfully")?;
-        crate::tui::confirm_quit(Some("return to main menu"))?;
-
+        screenln!("Deleted all game-related data successfully. Relaunch is required")?;
+        crate::tui::confirm_quit(Some("exit the game"))?;
+        self.is_running = false;
         Ok(())
     }
 
