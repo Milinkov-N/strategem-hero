@@ -162,6 +162,10 @@ impl<'a> Game<'a> {
             self.leaderboard.insert("You", self.state.score);
         }
 
+        self.player.add_to_wallet(self.state.score);
+        self.player.save()?;
+        self.leaderboard.save()?;
+
         screenln!("Restart the game [y/n]?")?;
         if tui::confirm_action()? {
             self.state.reset();
@@ -170,10 +174,6 @@ impl<'a> Game<'a> {
             self.is_running = false;
             return Ok(false);
         }
-
-        self.player.add_to_wallet(self.state.score);
-        self.player.save()?;
-        self.leaderboard.save()?;
 
         Ok(true)
     }
